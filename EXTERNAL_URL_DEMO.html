@@ -1,0 +1,153 @@
+st<!DOCTYPE html>
+<html>
+<head>
+    <title>External URL Display Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            max-width: 800px;
+        }
+        .demo-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 5px;
+        }
+        .url-display {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 3px;
+        }
+        .copy-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            margin-left: 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .copy-btn:hover {
+            background-color: #0052a3;
+        }
+        .copied {
+            background-color: #4CAF50 !important;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin: 5px 0;
+        }
+        .status.has-url {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status.no-url {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>External Apply URL Display - Demo</h1>
+
+    <div class="demo-section">
+        <h2>✅ Scenario 1: Job with External URL</h2>
+        <p><strong>Data in CSV:</strong> <code>https://careers.company.com/apply/12345</code></p>
+        <div class="url-display">
+            <span class="status has-url">✓ External URL Found</span><br><br>
+            Display in table:
+            <a href="https://careers.company.com/apply/12345" target="_blank">Open</a>
+            <button class="copy-btn" onclick="copyToClipboard('https://careers.company.com/apply/12345', this)">Copy</button>
+        </div>
+        <p><em>Users can click "Open" to visit the application page or "Copy" to copy the URL.</em></p>
+    </div>
+
+    <div class="demo-section">
+        <h2>📝 Scenario 2: Job with Easy Apply Available (but no external URL)</h2>
+        <p><strong>Data in CSV:</strong> <code>"Easy Apply Available"</code></p>
+        <div class="url-display">
+            <span class="status no-url">⚠ No External URL</span><br><br>
+            Display in table: <span style="color: #666;">Easy Apply Available</span>
+        </div>
+        <p><em>Just displays text, no clickable links since it's not a URL.</em></p>
+    </div>
+
+    <div class="demo-section">
+        <h2>🔄 Scenario 3: Job with both Easy Apply AND External URL</h2>
+        <p><strong>Previous Behavior:</strong> Would show <code>"Easy Apply Available"</code> and lose the external URL</p>
+        <p><strong>NEW Behavior (Fixed):</strong> Shows <code>https://apply.workable.com/job/789</code></p>
+        <div class="url-display">
+            <span class="status has-url">✓ External URL Captured</span><br><br>
+            Display in table:
+            <a href="https://apply.workable.com/job/789" target="_blank">Open</a>
+            <button class="copy-btn" onclick="copyToClipboard('https://apply.workable.com/job/789', this)">Copy</button>
+        </div>
+        <p><em>Now prioritizes the actual URL so users can still apply via company website even when Easy Apply exists.</em></p>
+    </div>
+
+    <div class="demo-section">
+        <h2>❌ Scenario 4: Job with no Easy Apply, no external URL</h2>
+        <p><strong>Data in CSV:</strong> <code>"External Apply"</code></p>
+        <div class="url-display">
+            <span class="status no-url">⚠ No URL Available</span><br><br>
+            Display in table: <span style="color: #666;">External Apply</span>
+        </div>
+        <p><em>Generic fallback text when no application method was detected.</em></p>
+    </div>
+
+    <div class="demo-section">
+        <h2>📋 How to Use in index.html</h2>
+        <ol>
+            <li>Run the bot to capture job data (it will now save actual URLs)</li>
+            <li>Run <code>python app.py</code> to start the Flask server</li>
+            <li>Open <code>http://localhost:5000</code> in your browser</li>
+            <li>Look for the "External Link" column in the table</li>
+            <li>Jobs with URLs will show "Open" and "Copy" buttons</li>
+            <li>Click "Open" to visit the application page in a new tab</li>
+            <li>Click "Copy" to copy the URL to your clipboard</li>
+        </ol>
+    </div>
+
+    <script>
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                button.textContent = '✓ Copied';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy link');
+            });
+        }
+    </script>
+</body>
+</html>
+

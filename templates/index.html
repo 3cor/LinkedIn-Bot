@@ -1,0 +1,464 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>LinkedIn Job Bot — History</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+        .topbar {
+            background: #0a66c2; color: white;
+            padding: 14px 24px; font-size: 20px; font-weight: bold; letter-spacing: 0.5px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        /* Tabs */
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; border-bottom: 2px solid #0a66c2; }
+        .tab-btn {
+            padding: 10px 22px; border: none; background: #dce8f5; color: #0a66c2;
+            cursor: pointer; border-radius: 6px 6px 0 0; font-size: 14px; font-weight: bold; transition: background 0.2s;
+        }
+        .tab-btn:hover { background: #b8d4ef; }
+        .tab-btn.active { background: #0a66c2; color: white; }
+        .tab-count {
+            display: inline-block; background: rgba(255,255,255,0.25);
+            border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 6px;
+        }
+        .tab-btn:not(.active) .tab-count { background: rgba(10,102,194,0.18); }
+        /* Panels */
+        .tab-panel { display: none; background: white; border-radius: 0 6px 6px 6px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .tab-panel.active { display: block; }
+        /* Filter bar */
+        .filter-bar {
+            display: flex; align-items: center; gap: 20px;
+            padding: 12px 16px; background: #f4f6f8; border-radius: 6px; margin-bottom: 14px; flex-wrap: wrap;
+        }
+        .filter-label { font-weight: bold; font-size: 13px; }
+        .filter-option { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+        .filter-stats { margin-left: auto; font-size: 13px; color: #666; }
+        input[type="text"].search-box {
+            padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; min-width: 200px;
+        }
+        /* Table */
+        table { border-collapse: collapse; width: 100%; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 9px 11px; text-align: left; vertical-align: top; }
+        th { background: #f4f4f4; font-weight: bold; white-space: nowrap; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        tr:hover { background: #eef4fc; }
+        .sl-col { width: 44px; text-align: center; white-space: nowrap; }
+        .applied-col { width: 60px; text-align: center; }
+        a { color: #0a66c2; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        /* Badges */
+        .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+        .badge-reposted   { background: #fff3e0; color: #e65100; }
+        .badge-easy-apply { background: #e3f2fd; color: #0d47a1; }
+        .badge-applied    { background: #e8f5e9; color: #2e7d32; }
+        .badge-new        { background: #fff8e1; color: #f57f17; }
+        .badge-skipped    { background: #fce4ec; color: #c62828; }
+        .badge-failed     { background: #fbe9e7; color: #bf360c; }
+        /* Buttons */
+        .copy-btn {
+            background: #0a66c2; color: white; border: none;
+            padding: 3px 8px; margin-left: 6px; cursor: pointer; border-radius: 3px; font-size: 11px;
+        }
+        .copy-btn:hover { background: #084fa1; }
+        .copy-btn.copied { background: #4caf50; }
+        .tick { color: #4caf50; font-weight: bold; font-size: 16px; }
+        .sort-btn { background: none; border: none; cursor: pointer; padding: 0 4px; font-size: 12px; color: #0a66c2; }
+        /* Cells */
+        .reason-cell { max-width: 280px; word-break: break-word; }
+        .desc-cell   { max-width: 320px; word-break: break-word; font-size: 12px; color: #555; }
+        .status-msg  { color: #888; padding: 20px; text-align: center; font-size: 14px; }
+        /* Expandable */
+        .expandable { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .expandable.open { -webkit-line-clamp: unset; }
+        .expand-toggle { color: #0a66c2; cursor: pointer; font-size: 11px; display: block; margin-top: 3px; }
+        /* Pagination */
+        .pagination-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 4px; margin-top: 10px; flex-wrap: wrap; gap: 10px;
+        }
+        .pg-size { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; }
+        .pg-size select {
+            padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer;
+        }
+        .pg-nav { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+        .pg-nav button {
+            padding: 5px 14px; border: 1px solid #0a66c2; border-radius: 4px;
+            background: white; color: #0a66c2; cursor: pointer; font-size: 13px; font-weight: bold;
+        }
+        .pg-nav button:hover:not(:disabled) { background: #0a66c2; color: white; }
+        .pg-nav button:disabled { border-color: #ccc; color: #ccc; cursor: default; }
+        .pg-info { font-size: 13px; color: #555; min-width: 200px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="topbar">&#x1F916; LinkedIn Job Bot &mdash; Application History</div>
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('applied')">
+            &#x2705; Applied <span class="tab-count" id="cnt-applied">&hellip;</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('skipped')">
+            &#x23ED;&#xFE0F; Skipped <span class="tab-count" id="cnt-skipped">&hellip;</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('failed')">
+            &#x274C; Failed <span class="tab-count" id="cnt-failed">&hellip;</span>
+        </button>
+    </div>
+    <!-- APPLIED -->
+    <div class="tab-panel active" id="panel-applied">
+        <div class="filter-bar">
+            <span class="filter-label">Filters:</span>
+            <label class="filter-option"><input type="checkbox" id="hideRepostedFilter" onchange="onFilterChange('applied')"> Hide Reposted</label>
+            <label class="filter-option"><input type="checkbox" id="easyApplyOnlyFilter" onchange="onFilterChange('applied')"> Easy Apply Only</label>
+            <label class="filter-option"><input type="checkbox" id="externalOnlyFilter" onchange="onFilterChange('applied')"> External Only</label>
+            <label class="filter-option"><input type="checkbox" id="appliedOnlyFilter" onchange="onFilterChange('applied')"> Applied Only</label>
+            <label class="filter-option"><input type="checkbox" id="newOnlyFilter" onchange="onFilterChange('applied')"> New Only</label>
+            <input type="text" class="search-box" id="searchApplied" placeholder="Search title / company&hellip;" oninput="onFilterChange('applied')">
+            <div class="filter-stats" id="statsApplied">Loading&hellip;</div>
+        </div>
+        <table><thead><tr>
+            <th class="sl-col">#</th>
+            <th>Job Title</th><th>Company</th><th>Category</th><th>Website</th>
+            <th>HR Contact</th><th>Applications</th><th>Type</th>
+            <th>Apply Link <button class="sort-btn" onclick="sortAppliedByExt()">&#x21D5;</button></th>
+            <th class="applied-col">Applied</th><th>Status</th><th>Visits</th><th>Last Seen</th>
+        </tr></thead>
+        <tbody id="appliedBody"><tr><td colspan="13" class="status-msg">Loading&hellip;</td></tr></tbody></table>
+        <div class="pagination-bar">
+            <div class="pg-size">Rows per page:
+                <select id="pgSize-applied" onchange="changePageSize('applied', this.value)">
+                    <option value="10">10</option><option value="20" selected>20</option>
+                    <option value="50">50</option><option value="100">100</option>
+                </select>
+            </div>
+            <div class="pg-nav">
+                <button id="prev-btn-applied" onclick="goPage('applied', pagination.applied.page - 1)" disabled>&#8249; Prev</button>
+                <span class="pg-info" id="page-info-applied">&ndash;</span>
+                <button id="next-btn-applied" onclick="goPage('applied', pagination.applied.page + 1)" disabled>Next &#8250;</button>
+            </div>
+        </div>
+    </div>
+    <!-- SKIPPED -->
+    <div class="tab-panel" id="panel-skipped">
+        <div class="filter-bar">
+            <span class="filter-label">Filters:</span>
+            <input type="text" class="search-box" id="searchSkipped" placeholder="Search title / company / reason&hellip;" oninput="onFilterChange('skipped')">
+            <div class="filter-stats" id="statsSkipped">Loading&hellip;</div>
+        </div>
+        <table><thead><tr>
+            <th class="sl-col">#</th>
+            <th>Job Title</th><th>Company</th><th>Location / Style</th><th>Category</th>
+            <th>Skip Reason</th><th>Experience Required</th><th>Skills</th><th>HR Contact</th>
+            <th>Type</th><th>Apply Link</th><th>Date Skipped</th><th>Visits</th><th>Last Seen</th>
+        </tr></thead>
+        <tbody id="skippedBody"><tr><td colspan="14" class="status-msg">Loading&hellip;</td></tr></tbody></table>
+        <div class="pagination-bar">
+            <div class="pg-size">Rows per page:
+                <select id="pgSize-skipped" onchange="changePageSize('skipped', this.value)">
+                    <option value="10">10</option><option value="20" selected>20</option>
+                    <option value="50">50</option><option value="100">100</option>
+                </select>
+            </div>
+            <div class="pg-nav">
+                <button id="prev-btn-skipped" onclick="goPage('skipped', pagination.skipped.page - 1)" disabled>&#8249; Prev</button>
+                <span class="pg-info" id="page-info-skipped">&ndash;</span>
+                <button id="next-btn-skipped" onclick="goPage('skipped', pagination.skipped.page + 1)" disabled>Next &#8250;</button>
+            </div>
+        </div>
+    </div>
+    <!-- FAILED -->
+    <div class="tab-panel" id="panel-failed">
+        <div class="filter-bar">
+            <span class="filter-label">Filters:</span>
+            <input type="text" class="search-box" id="searchFailed" placeholder="Search title / company / error&hellip;" oninput="onFilterChange('failed')">
+            <div class="filter-stats" id="statsFailed">Loading&hellip;</div>
+        </div>
+        <table><thead><tr>
+            <th class="sl-col">#</th>
+            <th>Job Title</th><th>Company</th><th>Location / Style</th><th>Category</th>
+            <th>Error / Reason</th><th>Experience Required</th><th>Skills</th><th>HR Contact</th>
+            <th>Type</th><th>Apply Link</th><th>Date Tried</th><th>Resume</th><th>Visits</th><th>Last Seen</th>
+        </tr></thead>
+        <tbody id="failedBody"><tr><td colspan="15" class="status-msg">Loading&hellip;</td></tr></tbody></table>
+        <div class="pagination-bar">
+            <div class="pg-size">Rows per page:
+                <select id="pgSize-failed" onchange="changePageSize('failed', this.value)">
+                    <option value="10">10</option><option value="20" selected>20</option>
+                    <option value="50">50</option><option value="100">100</option>
+                </select>
+            </div>
+            <div class="pg-nav">
+                <button id="prev-btn-failed" onclick="goPage('failed', pagination.failed.page - 1)" disabled>&#8249; Prev</button>
+                <span class="pg-info" id="page-info-failed">&ndash;</span>
+                <button id="next-btn-failed" onclick="goPage('failed', pagination.failed.page + 1)" disabled>Next &#8250;</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const state = {
+    applied: { data: [] },
+    skipped: { data: [] },
+    failed:  { data: [] },
+};
+const pagination = {
+    applied: { page: 1, pageSize: 20, total: 0, pages: 1 },
+    skipped: { page: 1, pageSize: 20, total: 0, pages: 1 },
+    failed:  { page: 1, pageSize: 20, total: 0, pages: 1 },
+};
+let appliedSortExt = 'none';
+function switchTab(name) {
+    const keys = ['applied','skipped','failed'];
+    document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', keys[i] === name));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+}
+function fmt(val, fallback) {
+    fallback = fallback === undefined ? 'N/A' : fallback;
+    return (val !== undefined && val !== null && val !== '' && val !== 'Unknown' && val !== 'None') ? val : fallback;
+}
+function isApplied(dt) {
+    return dt && dt !== 'Pending' && dt !== '' && dt !== 'Unknown' && dt !== 'None' && !String(dt).startsWith('Not Applied');
+}
+function applyLinkEl(url, isEasyApply) {
+    if (!url || !String(url).startsWith('http')) return null;
+    const a = document.createElement('a'); a.href = url; a.target = '_blank';
+    const badge = document.createElement('span');
+    badge.className = isEasyApply ? 'badge badge-easy-apply' : 'badge';
+    badge.style.cssText = isEasyApply ? '' : 'background:#e8f5e9;color:#1b5e20';
+    badge.textContent = isEasyApply ? 'Easy Apply' : 'External Apply';
+    a.appendChild(badge); return a;
+}
+function statusBadge(status) {
+    const s = (status || '').toString().trim();
+    const map = { 'Applied':'badge-applied', 'New':'badge-new', 'Skipped':'badge-skipped', 'Failed':'badge-failed' };
+    const b = document.createElement('span');
+    b.className = 'badge ' + (map[s] || 'badge-new'); b.textContent = s || 'New'; return b;
+}
+function typeTdEl(isEasyApply, status) {
+    const cell = document.createElement('td'); cell.appendChild(statusBadge(status));
+    if (isEasyApply === true || isEasyApply === 'True') {
+        cell.appendChild(document.createElement('br'));
+        const b = document.createElement('span'); b.className = 'badge badge-easy-apply'; b.textContent = 'Easy Apply';
+        cell.appendChild(b);
+    }
+    return cell;
+}
+function linkEl(href, text) {
+    if (!href || href === 'Unknown' || href === '' || href === 'N/A') return document.createTextNode('N/A');
+    const a = document.createElement('a'); a.href = href; a.textContent = text; a.target = '_blank'; return a;
+}
+function expandable(text) {
+    if (!text || text === 'Unknown' || text === 'N/A') return document.createTextNode('N/A');
+    const wrap = document.createElement('div');
+    const div = document.createElement('div'); div.className = 'expandable'; div.textContent = text; wrap.appendChild(div);
+    if (text.length > 120) {
+        const tog = document.createElement('span'); tog.className = 'expand-toggle'; tog.textContent = 'Show more';
+        tog.onclick = () => { const o = div.classList.toggle('open'); tog.textContent = o ? 'Show less' : 'Show more'; };
+        wrap.appendChild(tog);
+    }
+    return wrap;
+}
+function td(content, cls) {
+    const cell = document.createElement('td'); if (cls) cell.className = cls;
+    if (content instanceof Node) cell.appendChild(content); else cell.textContent = content; return cell;
+}
+/* ── Pagination ── */
+function updatePaginationUI(tab) {
+    const pg = pagination[tab];
+    const start = pg.total === 0 ? 0 : (pg.page - 1) * pg.pageSize + 1;
+    const end   = Math.min(pg.page * pg.pageSize, pg.total);
+    document.getElementById('page-info-' + tab).textContent =
+        pg.total === 0 ? 'No results' : (start + '\u2013' + end + ' of ' + pg.total + '  (Page ' + pg.page + ' / ' + pg.pages + ')');
+    document.getElementById('prev-btn-' + tab).disabled = pg.page <= 1;
+    document.getElementById('next-btn-' + tab).disabled = pg.page >= pg.pages;
+}
+function goPage(tab, newPage) {
+    const pg = pagination[tab];
+    if (newPage < 1 || newPage > pg.pages) return;
+    pg.page = newPage; fetchTab(tab);
+}
+function changePageSize(tab, size) {
+    pagination[tab].pageSize = parseInt(size); pagination[tab].page = 1; fetchTab(tab);
+}
+function onFilterChange(tab) { pagination[tab].page = 1; fetchTab(tab); }
+function fetchTab(tab) {
+    if (tab === 'applied') fetchApplied();
+    else if (tab === 'skipped') fetchSkipped();
+    else fetchFailed();
+}
+/* ── Applied ── */
+async function fetchApplied() {
+    const pg = pagination.applied;
+    const params = new URLSearchParams({ page: pg.page, page_size: pg.pageSize });
+    const easyOnly = document.getElementById('easyApplyOnlyFilter').checked;
+    const extOnly  = document.getElementById('externalOnlyFilter').checked;
+    if (easyOnly && !extOnly)  params.set('is_easy_apply', 'true');
+    if (extOnly  && !easyOnly) params.set('is_easy_apply', 'false');
+    if (document.getElementById('hideRepostedFilter').checked) params.set('hide_reposted', 'true');
+    const appliedOnly = document.getElementById('appliedOnlyFilter').checked;
+    const newOnly     = document.getElementById('newOnlyFilter').checked;
+    if (appliedOnly && !newOnly) params.set('status', 'Applied');
+    if (newOnly && !appliedOnly) params.set('status', 'New');
+    const q = document.getElementById('searchApplied').value.trim();
+    if (q) params.set('search', q);
+    try {
+        const res = await fetch('/applied-jobs?' + params); const json = await res.json();
+        if (json.error) { document.getElementById('cnt-applied').textContent = '!'; return; }
+        state.applied.data = json.data;
+        pagination.applied.total = json.total; pagination.applied.pages = json.pages; pagination.applied.page = json.page;
+        document.getElementById('cnt-applied').textContent = json.total;
+        renderApplied(); updatePaginationUI('applied');
+    } catch(err) { document.getElementById('cnt-applied').textContent = '!'; console.error(err); }
+}
+function renderApplied() {
+    const pg = pagination.applied; const data = state.applied.data;
+    const tbody = document.getElementById('appliedBody'); tbody.innerHTML = '';
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="13" class="status-msg">No jobs found.</td></tr>'; document.getElementById('statsApplied').textContent = 'No results'; return; }
+    data.forEach(function(job, i) {
+        const gi = (pg.page - 1) * pg.pageSize + i + 1;
+        const row = document.createElement('tr');
+        const sl = document.createElement('td'); sl.className = 'sl-col'; sl.textContent = gi; row.appendChild(sl);
+        row.appendChild(td(linkEl(job.Job_Link, job.Title)));
+        row.appendChild(td(fmt(job.Company)));
+        row.appendChild(td(fmt(job.Job_Category)));
+        const wTd = document.createElement('td');
+        wTd.appendChild(linkEl(job.Company_Website && job.Company_Website !== 'Unknown' ? job.Company_Website : '', 'Website'));
+        row.appendChild(wTd);
+        const hrTd = document.createElement('td');
+        hrTd.appendChild(job.HR_Name && job.HR_Name !== 'Unknown' ? linkEl(job.HR_Link, job.HR_Name) : document.createTextNode('N/A'));
+        row.appendChild(hrTd);
+        row.appendChild(td(fmt(job.Number_of_Applications)));
+        const typeTd = document.createElement('td');
+        if (job.Is_Easy_Apply === true || job.Is_Easy_Apply === 'True') { const b = document.createElement('span'); b.className = 'badge badge-easy-apply'; b.textContent = 'Easy Apply'; typeTd.appendChild(b); }
+        if (job.Re_posted === true || job.Re_posted === 'True') {
+            if (typeTd.childNodes.length) typeTd.appendChild(document.createElement('br'));
+            const b = document.createElement('span'); b.className = 'badge badge-reposted'; b.textContent = 'Reposted'; typeTd.appendChild(b);
+        }
+        row.appendChild(typeTd);
+        const extTd = document.createElement('td'); const appTd = document.createElement('td'); appTd.className = 'applied-col';
+        const applyUrl = job.External_Job_link || ''; const easyApply = job.Is_Easy_Apply === true || job.Is_Easy_Apply === 'True';
+        const applied = isApplied(job.Date_Applied); const applyEl = applyLinkEl(applyUrl, easyApply);
+        if (applied) {
+            extTd.appendChild(applyEl || document.createTextNode(easyApply ? 'Easy Apply' : '\u2014'));
+            appTd.innerHTML = '<span class="tick">\u2713</span>';
+        } else if (applyEl) {
+            const cpBtn = document.createElement('button'); cpBtn.className = 'copy-btn'; cpBtn.textContent = 'Copy';
+            cpBtn.onclick = function(e) { e.preventDefault(); navigator.clipboard.writeText(applyUrl).then(function() { cpBtn.textContent = '\u2713'; cpBtn.classList.add('copied'); setTimeout(function() { cpBtn.textContent = 'Copy'; cpBtn.classList.remove('copied'); }, 2000); }); };
+            applyEl.addEventListener('click', async function() { try { const r = await fetch('/applied-jobs/' + job.Job_ID, { method: 'PUT', headers: { 'Content-Type': 'application/json' } }); if (r.ok) appTd.innerHTML = '<span class="tick">\u2713</span>'; } catch(err) { console.error(err); } });
+            extTd.appendChild(applyEl); extTd.appendChild(cpBtn);
+        } else { extTd.textContent = '\u2014'; }
+        row.appendChild(extTd); row.appendChild(appTd);
+        const stTd = document.createElement('td'); stTd.appendChild(statusBadge(job.Status)); row.appendChild(stTd);
+        row.appendChild(td(fmt(job.Visits_Count, '1'))); row.appendChild(td(fmt(job.Last_Seen)));
+        tbody.appendChild(row);
+    });
+    const start = (pg.page - 1) * pg.pageSize + 1; const end = Math.min(pg.page * pg.pageSize, pg.total);
+    document.getElementById('statsApplied').textContent = 'Showing ' + start + '\u2013' + end + ' of ' + pg.total + ' jobs';
+}
+function sortAppliedByExt() {
+    appliedSortExt = appliedSortExt === 'asc' ? 'desc' : 'asc';
+    state.applied.data.sort(function(a, b) { const va = a.External_Job_link || '', vb = b.External_Job_link || ''; return appliedSortExt === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va); });
+    renderApplied();
+}
+/* ── Skipped ── */
+async function fetchSkipped() {
+    const pg = pagination.skipped;
+    const params = new URLSearchParams({ page: pg.page, page_size: pg.pageSize });
+    const q = document.getElementById('searchSkipped').value.trim(); if (q) params.set('search', q);
+    try {
+        const res = await fetch('/skipped-jobs?' + params); const json = await res.json();
+        if (json.error) { document.getElementById('cnt-skipped').textContent = '!'; return; }
+        state.skipped.data = json.data;
+        pagination.skipped.total = json.total; pagination.skipped.pages = json.pages; pagination.skipped.page = json.page;
+        document.getElementById('cnt-skipped').textContent = json.total;
+        renderSkipped(); updatePaginationUI('skipped');
+    } catch(err) { document.getElementById('cnt-skipped').textContent = '!'; console.error(err); }
+}
+function renderSkipped() {
+    const pg = pagination.skipped; const tbody = document.getElementById('skippedBody'); tbody.innerHTML = '';
+    if (!state.skipped.data.length) { tbody.innerHTML = '<tr><td colspan="14" class="status-msg">No skipped jobs.</td></tr>'; document.getElementById('statsSkipped').textContent = 'No results'; return; }
+    state.skipped.data.forEach(function(job, i) {
+        const gi = (pg.page - 1) * pg.pageSize + i + 1;
+        const row = document.createElement('tr');
+        const sl = document.createElement('td'); sl.className = 'sl-col'; sl.textContent = gi; row.appendChild(sl);
+        row.appendChild(td(linkEl(job.Job_Link, job.Title || job.Job_ID)));
+        const compTd = document.createElement('td');
+        compTd.appendChild(job.Company_Website && job.Company_Website !== 'Unknown' ? linkEl(job.Company_Website, job.Company) : document.createTextNode(fmt(job.Company)));
+        row.appendChild(compTd);
+        row.appendChild(td(fmt(job.Work_Location) + ' / ' + fmt(job.Work_Style)));
+        row.appendChild(td(fmt(job.Job_Category)));
+        const rTd = document.createElement('td'); rTd.className = 'reason-cell';
+        const b = document.createElement('span'); b.className = 'badge badge-skipped'; b.textContent = fmt(job.Skip_Reason, 'Unknown');
+        rTd.appendChild(b); row.appendChild(rTd);
+        row.appendChild(td(fmt(job.Experience_Required)));
+        const skTd = document.createElement('td'); skTd.className = 'desc-cell'; skTd.appendChild(expandable(job.Skills_Required)); row.appendChild(skTd);
+        const hrTd = document.createElement('td');
+        hrTd.appendChild(job.HR_Name && job.HR_Name !== 'Unknown' ? linkEl(job.HR_Link, job.HR_Name) : document.createTextNode('N/A'));
+        row.appendChild(hrTd);
+        row.appendChild(typeTdEl(job.Is_Easy_Apply, job.Status || 'Skipped'));
+        const aLinkTd = document.createElement('td');
+        const aEl = applyLinkEl(job.External_Job_link || '', job.Is_Easy_Apply === true || job.Is_Easy_Apply === 'True');
+        aLinkTd.appendChild(aEl || document.createTextNode('\u2014')); row.appendChild(aLinkTd);
+        row.appendChild(td(fmt(job.Date_Applied)));
+        row.appendChild(td(fmt(job.Visits_Count, '1'))); row.appendChild(td(fmt(job.Last_Seen)));
+        tbody.appendChild(row);
+    });
+    const start = (pg.page - 1) * pg.pageSize + 1; const end = Math.min(pg.page * pg.pageSize, pg.total);
+    document.getElementById('statsSkipped').textContent = 'Showing ' + start + '\u2013' + end + ' of ' + pg.total + ' jobs';
+}
+/* ── Failed ── */
+async function fetchFailed() {
+    const pg = pagination.failed;
+    const params = new URLSearchParams({ page: pg.page, page_size: pg.pageSize });
+    const q = document.getElementById('searchFailed').value.trim(); if (q) params.set('search', q);
+    try {
+        const res = await fetch('/failed-jobs?' + params); const json = await res.json();
+        if (json.error) { document.getElementById('cnt-failed').textContent = '!'; return; }
+        state.failed.data = json.data;
+        pagination.failed.total = json.total; pagination.failed.pages = json.pages; pagination.failed.page = json.page;
+        document.getElementById('cnt-failed').textContent = json.total;
+        renderFailed(); updatePaginationUI('failed');
+    } catch(err) { document.getElementById('cnt-failed').textContent = '!'; console.error(err); }
+}
+function renderFailed() {
+    const pg = pagination.failed; const tbody = document.getElementById('failedBody'); tbody.innerHTML = '';
+    if (!state.failed.data.length) { tbody.innerHTML = '<tr><td colspan="15" class="status-msg">No failed jobs.</td></tr>'; document.getElementById('statsFailed').textContent = 'No results'; return; }
+    state.failed.data.forEach(function(job, i) {
+        const gi = (pg.page - 1) * pg.pageSize + i + 1;
+        const row = document.createElement('tr');
+        const sl = document.createElement('td'); sl.className = 'sl-col'; sl.textContent = gi; row.appendChild(sl);
+        row.appendChild(td(linkEl(job.Job_Link, job.Title || job.Job_ID)));
+        const compTd = document.createElement('td');
+        compTd.appendChild(job.Company_Website && job.Company_Website !== 'Unknown' ? linkEl(job.Company_Website, job.Company) : document.createTextNode(fmt(job.Company)));
+        row.appendChild(compTd);
+        row.appendChild(td(fmt(job.Work_Location) + ' / ' + fmt(job.Work_Style)));
+        row.appendChild(td(fmt(job.Job_Category)));
+        const errTd = document.createElement('td'); errTd.className = 'reason-cell';
+        const errB = document.createElement('span'); errB.className = 'badge badge-failed'; errB.textContent = fmt(job.Failure_Reason, 'Unknown');
+        errTd.appendChild(errB); row.appendChild(errTd);
+        row.appendChild(td(fmt(job.Experience_Required)));
+        const skTd = document.createElement('td'); skTd.className = 'desc-cell'; skTd.appendChild(expandable(job.Skills_Required)); row.appendChild(skTd);
+        const hrTd = document.createElement('td');
+        hrTd.appendChild(job.HR_Name && job.HR_Name !== 'Unknown' ? linkEl(job.HR_Link, job.HR_Name) : document.createTextNode('N/A'));
+        row.appendChild(hrTd);
+        row.appendChild(typeTdEl(job.Is_Easy_Apply, job.Status || 'Failed'));
+        const fLinkTd = document.createElement('td');
+        const fEl = applyLinkEl(job.External_Job_link || '', job.Is_Easy_Apply === true || job.Is_Easy_Apply === 'True');
+        fLinkTd.appendChild(fEl || document.createTextNode('\u2014')); row.appendChild(fLinkTd);
+        row.appendChild(td(fmt(job.Date_Applied)));
+        row.appendChild(td(fmt(job.Screenshot, '\u2014')));
+        row.appendChild(td(fmt(job.Visits_Count, '1'))); row.appendChild(td(fmt(job.Last_Seen)));
+        tbody.appendChild(row);
+    });
+    const start = (pg.page - 1) * pg.pageSize + 1; const end = Math.min(pg.page * pg.pageSize, pg.total);
+    document.getElementById('statsFailed').textContent = 'Showing ' + start + '\u2013' + end + ' of ' + pg.total + ' jobs';
+}
+/* ── Boot ── */
+fetchApplied();
+fetchSkipped();
+fetchFailed();
+</script>
+</body>
+</html>
