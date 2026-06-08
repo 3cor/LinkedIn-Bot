@@ -25,6 +25,39 @@ def check_int(var: int, var_name: str, min_value: int=0) -> bool | TypeError | V
     if var < min_value: raise ValueError(f'The variable "{var_name}" in "{__validation_file_path}" expects an Integer greater than or equal to `{min_value}`! Received `{var}` instead!\n\nSolution:\nPlease open "{__validation_file_path}" and update "{var_name}" accordingly.')
     return True
 
+def check_search_terms(var: list, var_name: str) -> bool | TypeError | ValueError:
+    '''
+    Validates the search_terms list.
+    Each entry must be either:
+      - a str  (plain search term, no operator)
+      - a dict with "terms" (list of str, at least 1) and optionally "operator" ("AND"/"OR")
+    '''
+    if not isinstance(var, list):
+        raise TypeError(f'The variable "{var_name}" in "{__validation_file_path}" must be a List!')
+    if len(var) < 1:
+        raise ValueError(f'The variable "{var_name}" in "{__validation_file_path}" must contain at least 1 search term!')
+    for i, entry in enumerate(var):
+        if isinstance(entry, str):
+            continue
+        if isinstance(entry, dict):
+            if "terms" not in entry:
+                raise ValueError(f'Entry {i} in "{var_name}": dict must have a "terms" key. Got: {entry}')
+            terms = entry["terms"]
+            if not isinstance(terms, list) or len(terms) < 1:
+                raise ValueError(f'Entry {i} in "{var_name}": "terms" must be a non-empty list. Got: {terms}')
+            for t in terms:
+                if not isinstance(t, str):
+                    raise TypeError(f'Entry {i} in "{var_name}": every item in "terms" must be a string. Got: {t!r}')
+            if "operator" in entry:
+                op = entry["operator"]
+                if not isinstance(op, str) or op.upper() not in ("AND", "OR"):
+                    raise ValueError(f'Entry {i} in "{var_name}": "operator" must be "AND" or "OR". Got: {op!r}')
+        else:
+            raise TypeError(f'Entry {i} in "{var_name}" must be a str or a dict, got {type(entry).__name__!r}: {entry!r}')
+    return True
+
+
+
 def check_boolean(var: bool, var_name: str) -> bool | ValueError:
     if var == True or var == False: return True
     raise ValueError(f'The variable "{var_name}" in "{__validation_file_path}" expects a Boolean input `True` or `False`, not "{var}" of type "{type(var)}" instead!\n\nSolution:\nPlease open "{__validation_file_path}" and update "{var_name}" to either `True` or `False` (case-sensitive, T and F must be CAPITAL/uppercase).\nExample: `{var_name} = True`\n\nNOTE: Do NOT surround Boolean values in quotes ("True")X !\n\n')
@@ -132,7 +165,7 @@ def validate_search() -> None | ValueError | TypeError:
     global __validation_file_path
     __validation_file_path = "config/search.py"
 
-    check_list(search_terms, "search_terms", min_length=1)
+    check_search_terms(search_terms, "search_terms")
     check_string(search_location, "search_location")
     check_int(switch_number, "switch_number", 1)
     check_boolean(randomize_search_order, "randomize_search_order")
@@ -160,10 +193,13 @@ def validate_search() -> None | ValueError | TypeError:
 
     check_boolean(pause_after_filters, "pause_after_filters")
 
+    check_list(blacklisted_company_names, "blacklisted_company_names")
     check_list(about_company_bad_words, "about_company_bad_words")
     check_list(about_company_good_words, "about_company_good_words")
     check_int(minimum_company_size, "minimum_company_size", 0)
     check_list(bad_words, "bad_words")
+    check_list(job_description_good_words, "job_description_good_words")
+    check_string(job_description_good_words_operator, "job_description_good_words_operator", ["OR", "AND"])
     check_boolean(security_clearance, "security_clearance")
     check_boolean(did_masters, "did_masters")
     check_int(current_experience, "current_experience", -1)

@@ -16,9 +16,30 @@ version:    26.01.20.5.08
 
 ###################################################### LINKEDIN SEARCH PREFERENCES ######################################################
 
-# These Sentences are Searched in LinkedIn
-# Enter your search terms inside '[ ]' with quotes ' "searching title" ' for each search followed by comma ', ' Eg: ["Software Engineer", "Software Developer", "Selenium Developer"]
-search_terms = ["Dotnet", ".Net", "C#", "C Sharp"]     # (dynamic multiple search) or leave empty as []. Examples: [], ["Software Engineer"], ["Software Engineer", "Software Developer"], ["Software Engineer", "Software Developer", "Selenium Developer"], etc. Note: Search terms are case sensitive and should be in quotes. Some valid examples: [], ["Software Engineer"], ["Software Engineer", "Software Developer"], ["Software Engineer", "Software Developer", "Selenium Developer"], ["Data Scientist", "Data Analyst", "Machine Learning Engineer"], ["Product Manager", "Project Manager", "Program Manager"], ["Graphic Designer", "UX Designer", "Visual Designer"], ["Marketing Manager", "Digital Marketing Specialist", "Content Strategist"], ["Financial Analyst", "Investment Analyst", "Business Analyst"], ["Human Resources Manager", "HR Specialist", "Talent Acquisition Specialist"], ["Operations Manager", "Supply Chain Manager", "Logistics Coordinator"], ["Customer Service Representative", "Client Support Specialist", "Help Desk Technician"], ["Sales Representative", "Account Executive", "Business Development Representative"], ["Administrative Assistant", "Executive Assistant", "Office Manager"]
+# Job search terms — each entry in the list can be:
+#
+#   1. A plain string  →  keywords are sent WITHOUT double quotes (broad match)
+#      Example:  "Software Engineer"
+#      LinkedIn URL: keywords=Software Engineer
+#
+#   2. A dict with "terms" + "operator"  →  each term is quoted and joined with AND / OR
+#      Example:  {"terms": ["Software Engineer", "Java"], "operator": "AND"}
+#      LinkedIn URL: keywords="Software Engineer" AND "Java"
+#
+#      Example:  {"terms": ["Software Engineer", "Backend Engineer"], "operator": "OR"}
+#      LinkedIn URL: keywords="Software Engineer" OR "Backend Engineer"
+#
+#      Single-term dict (one term + any operator) wraps the term in double quotes:
+#      Example:  {"terms": ["Lead Software Engineer"], "operator": "AND"}
+#      LinkedIn URL: keywords="Lead Software Engineer"
+#
+# Valid operator values: "AND", "OR"  (case-insensitive)
+search_terms = [
+    #"Software Engineer",                                                      # plain → no quotes
+    # {"terms": ["Software Engineer", "Java"], "operator": "AND"},           # → "Software Engineer" AND "Java"
+     {"terms": ["Software Engineer", "Backend Engineer"], "operator": "OR"},# → "Software Engineer" OR "Backend Engineer"
+    # {"terms": ["Lead Software Engineer"], "operator": "AND"},              # single term → "Lead Software Engineer"
+]
 
 #  "Python Developer", "Selenium Developer", "React Developer", "Java Developer", "Front End Developer", "Full Stack Developer", "Web Developer", "Nodejs Developer"
 
@@ -80,7 +101,15 @@ pause_after_filters = False         # True or False, Note: True or False are cas
 ##
 
 ## >>>>>>>>>>> SKIP IRRELEVANT JOBS <<<<<<<<<<<
- 
+
+# Exact company names to always skip — matched case-insensitively against the company name shown in the job listing.
+# These are applied immediately when the job card is loaded, before any About Company check.
+blacklisted_company_names = ["Tata Consultancy Services", "Infosys", "Wipro","Jobs via Dice","DataAnnotation","TEKsystems","Cognizant","ZipRecruiter"]      # (dynamic multiple search) or leave empty as []. Ex: ["Tata Consultancy Services", "Infosys", "Wipro"]
+'''
+Note: Company names must match the text shown in the LinkedIn job card (the subtitle line, before the ·).
+Matching is case-insensitive. To skip by keyword in the About Company section instead, use `about_company_bad_words` below.
+'''
+
 # Avoid applying to these companies, and companies with these bad words in their 'About Company' section...
 about_company_bad_words = ["Staffing", "Recruiting"]       # (dynamic multiple search) or leave empty as []. Ex: ["Staffing", "Recruiting", "Name of Company you don't want to apply to"]
 
@@ -101,6 +130,15 @@ The bot will skip companies below your minimum_company_size threshold based on t
 
 # Avoid applying to these companies if they have these bad words in their 'Job Description' section...  (In development)
 bad_words = ["No Sponsorship","C2C", "Corp2Corp", "CNC"]                     # (dynamic multiple search) or leave empty as []. Case Insensitive. Ex: ["word_1", "phrase 1", "word word", "polygraph", "US Citizenship", "Security Clearance"]
+
+# Only apply to jobs whose 'Job Description' contains these required good words. Leave empty as [] to disable this check.
+# Case Insensitive. Ex: ["Java", "Spring Boot"] — see job_description_good_words_operator below for AND/OR logic.
+job_description_good_words = ["Java", "API", "backend", "full-stack","restful","aws","gcp", "typescript","cloud"]      # (dynamic multiple search) or leave empty as [] to skip this check. Ex: ["Java"], ["Python", "Django"], ["React", "TypeScript"]
+
+# Operator to use when checking job_description_good_words:
+#   "OR"  → skip the job if NONE of the words are found  (at least one must match)
+#   "AND" → skip the job if ANY of the words is missing  (all words must match)
+job_description_good_words_operator = "OR"  # "OR" or "AND"
 
 # Do you have an active Security Clearance? (True for Yes and False for No)
 security_clearance = False         # True or False, Note: True or False are case-sensitive

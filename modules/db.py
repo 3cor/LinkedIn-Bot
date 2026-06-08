@@ -263,3 +263,22 @@ def update_job_date(db, job_id: str, new_date: datetime) -> bool:
     except PyMongoError as e:
         print(f"⚠️ MongoDB: Failed to update date_applied for '{job_id}': {e}")
         return False
+
+
+def get_company_job_counts(db, query: dict = None) -> list:
+    """
+    Return per-company job counts for jobs matching `query`, sorted by count descending.
+    Each element: { "company": str, "count": int }
+    """
+    try:
+        pipeline = [
+            {"$match": query or {}},
+            {"$group": {"_id": "$company", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$project": {"_id": 0, "company": "$_id", "count": 1}},
+        ]
+        return list(db[COLLECTION].aggregate(pipeline))
+    except PyMongoError as e:
+        print(f"⚠️ MongoDB: Failed to aggregate company counts: {e}")
+        return []
+

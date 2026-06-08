@@ -5,39 +5,21 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
-        .topbar {
-            background: #0a66c2; color: white;
-            padding: 14px 24px; font-size: 20px; font-weight: bold; letter-spacing: 0.5px;
-        }
+        .topbar { background: #0a66c2; color: white; padding: 14px 24px; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        /* Tabs */
         .tabs { display: flex; gap: 4px; margin-bottom: 0; border-bottom: 2px solid #0a66c2; }
-        .tab-btn {
-            padding: 10px 22px; border: none; background: #dce8f5; color: #0a66c2;
-            cursor: pointer; border-radius: 6px 6px 0 0; font-size: 14px; font-weight: bold; transition: background 0.2s;
-        }
+        .tab-btn { padding: 10px 22px; border: none; background: #dce8f5; color: #0a66c2; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 14px; font-weight: bold; transition: background 0.2s; }
         .tab-btn:hover { background: #b8d4ef; }
         .tab-btn.active { background: #0a66c2; color: white; }
-        .tab-count {
-            display: inline-block; background: rgba(255,255,255,0.25);
-            border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 6px;
-        }
+        .tab-count { display: inline-block; background: rgba(255,255,255,0.25); border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 6px; }
         .tab-btn:not(.active) .tab-count { background: rgba(10,102,194,0.18); }
-        /* Panels */
         .tab-panel { display: none; background: white; border-radius: 0 6px 6px 6px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .tab-panel.active { display: block; }
-        /* Filter bar */
-        .filter-bar {
-            display: flex; align-items: center; gap: 20px;
-            padding: 12px 16px; background: #f4f6f8; border-radius: 6px; margin-bottom: 14px; flex-wrap: wrap;
-        }
+        .filter-bar { display: flex; align-items: center; gap: 20px; padding: 12px 16px; background: #f4f6f8; border-radius: 6px; margin-bottom: 14px; flex-wrap: wrap; }
         .filter-label { font-weight: bold; font-size: 13px; }
         .filter-option { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
         .filter-stats { margin-left: auto; font-size: 13px; color: #666; }
-        input[type="text"].search-box {
-            padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; min-width: 200px;
-        }
-        /* Table */
+        input[type="text"].search-box { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; min-width: 200px; }
         table { border-collapse: collapse; width: 100%; font-size: 13px; }
         th, td { border: 1px solid #ddd; padding: 9px 11px; text-align: left; vertical-align: top; }
         th { background: #f4f4f4; font-weight: bold; white-space: nowrap; }
@@ -47,98 +29,88 @@
         .applied-col { width: 60px; text-align: center; }
         a { color: #0a66c2; text-decoration: none; }
         a:hover { text-decoration: underline; }
-        /* Badges */
         .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: bold; }
         .badge-reposted   { background: #fff3e0; color: #e65100; }
         .badge-easy-apply { background: #e3f2fd; color: #0d47a1; }
-        .badge-applied    { background: #e8f5e9; color: #2e7d32; }
+        .badge-active     { background: #e8f5e9; color: #2e7d32; }
         .badge-new        { background: #fff8e1; color: #f57f17; }
         .badge-skipped    { background: #fce4ec; color: #c62828; }
         .badge-failed     { background: #fbe9e7; color: #bf360c; }
-        /* Buttons */
-        .copy-btn {
-            background: #0a66c2; color: white; border: none;
-            padding: 3px 8px; margin-left: 6px; cursor: pointer; border-radius: 3px; font-size: 11px;
-        }
+        .copy-btn { background: #0a66c2; color: white; border: none; padding: 3px 8px; margin-left: 6px; cursor: pointer; border-radius: 3px; font-size: 11px; }
         .copy-btn:hover { background: #084fa1; }
         .copy-btn.copied { background: #4caf50; }
         .tick { color: #4caf50; font-weight: bold; font-size: 16px; }
         .sort-btn { background: none; border: none; cursor: pointer; padding: 0 4px; font-size: 12px; color: #0a66c2; }
-        /* Cells */
         .reason-cell { max-width: 280px; word-break: break-word; }
         .desc-cell   { max-width: 320px; word-break: break-word; font-size: 12px; color: #555; }
         .status-msg  { color: #888; padding: 20px; text-align: center; font-size: 14px; }
-        /* Expandable */
         .expandable { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         .expandable.open { -webkit-line-clamp: unset; }
         .expand-toggle { color: #0a66c2; cursor: pointer; font-size: 11px; display: block; margin-top: 3px; }
-        /* Pagination */
-        .pagination-bar {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 4px; margin-top: 10px; flex-wrap: wrap; gap: 10px;
-        }
+        .pagination-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; margin-top: 10px; flex-wrap: wrap; gap: 10px; }
         .pg-size { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; }
-        .pg-size select {
-            padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer;
-        }
+        .pg-size select { padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer; }
         .pg-nav { display: flex; align-items: center; gap: 10px; font-size: 13px; }
-        .pg-nav button {
-            padding: 5px 14px; border: 1px solid #0a66c2; border-radius: 4px;
-            background: white; color: #0a66c2; cursor: pointer; font-size: 13px; font-weight: bold;
-        }
+        .pg-nav button { padding: 5px 14px; border: 1px solid #0a66c2; border-radius: 4px; background: white; color: #0a66c2; cursor: pointer; font-size: 13px; font-weight: bold; }
         .pg-nav button:hover:not(:disabled) { background: #0a66c2; color: white; }
         .pg-nav button:disabled { border-color: #ccc; color: #ccc; cursor: default; }
         .pg-info { font-size: 13px; color: #555; min-width: 200px; text-align: center; }
+        /* Summary */
+        .summary-stat-bar { display: flex; align-items: stretch; gap: 20px; padding: 16px; background: #f4f6f8; border-radius: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+        .stat-card { background: white; border-radius: 8px; padding: 14px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; min-width: 140px; flex: 1; }
+        .stat-val { font-size: 30px; font-weight: bold; color: #0a66c2; }
+        .stat-lbl { font-size: 12px; color: #666; margin-top: 4px; }
+        .count-cell { text-align: right; font-weight: bold; color: #0a66c2; font-size: 14px; min-width: 60px; }
+        .bar-wrap { display: flex; align-items: center; gap: 8px; }
+        .bar-bg { flex: 1; background: #e3edf7; border-radius: 4px; height: 10px; overflow: hidden; }
+        .bar-fill { height: 10px; background: #0a66c2; border-radius: 4px; transition: width 0.4s; }
     </style>
 </head>
 <body>
 <div class="topbar">&#x1F916; LinkedIn Job Bot &mdash; Application History</div>
 <div class="container">
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('applied')">
-            &#x2705; Applied <span class="tab-count" id="cnt-applied">&hellip;</span>
-        </button>
-        <button class="tab-btn" onclick="switchTab('skipped')">
-            &#x23ED;&#xFE0F; Skipped <span class="tab-count" id="cnt-skipped">&hellip;</span>
-        </button>
-        <button class="tab-btn" onclick="switchTab('failed')">
-            &#x274C; Failed <span class="tab-count" id="cnt-failed">&hellip;</span>
-        </button>
+        <button class="tab-btn active" onclick="switchTab('active')">&#x2705; Active <span class="tab-count" id="cnt-active">&hellip;</span></button>
+        <button class="tab-btn" onclick="switchTab('skipped')">&#x23ED;&#xFE0F; Skipped <span class="tab-count" id="cnt-skipped">&hellip;</span></button>
+        <button class="tab-btn" onclick="switchTab('failed')">&#x274C; Failed <span class="tab-count" id="cnt-failed">&hellip;</span></button>
+        <button class="tab-btn" onclick="switchTab('summary')">&#x1F4CA; Summary <span class="tab-count" id="cnt-summary">&hellip;</span></button>
     </div>
-    <!-- APPLIED -->
-    <div class="tab-panel active" id="panel-applied">
+
+    <!-- ACTIVE -->
+    <div class="tab-panel active" id="panel-active">
         <div class="filter-bar">
             <span class="filter-label">Filters:</span>
-            <label class="filter-option"><input type="checkbox" id="hideRepostedFilter" onchange="onFilterChange('applied')"> Hide Reposted</label>
-            <label class="filter-option"><input type="checkbox" id="easyApplyOnlyFilter" onchange="onFilterChange('applied')"> Easy Apply Only</label>
-            <label class="filter-option"><input type="checkbox" id="externalOnlyFilter" onchange="onFilterChange('applied')"> External Only</label>
-            <label class="filter-option"><input type="checkbox" id="appliedOnlyFilter" onchange="onFilterChange('applied')"> Applied Only</label>
-            <label class="filter-option"><input type="checkbox" id="newOnlyFilter" onchange="onFilterChange('applied')"> New Only</label>
-            <input type="text" class="search-box" id="searchApplied" placeholder="Search title / company&hellip;" oninput="onFilterChange('applied')">
-            <div class="filter-stats" id="statsApplied">Loading&hellip;</div>
+            <label class="filter-option"><input type="checkbox" id="hideRepostedFilter" onchange="onFilterChange('active')"> Hide Reposted</label>
+            <label class="filter-option"><input type="checkbox" id="easyApplyOnlyFilter" onchange="onFilterChange('active')"> Easy Apply Only</label>
+            <label class="filter-option"><input type="checkbox" id="externalOnlyFilter" onchange="onFilterChange('active')"> External Only</label>
+            <label class="filter-option"><input type="checkbox" id="activeOnlyFilter" onchange="onFilterChange('active')"> Active Only</label>
+            <label class="filter-option"><input type="checkbox" id="newOnlyFilter" onchange="onFilterChange('active')"> New Only</label>
+            <input type="text" class="search-box" id="searchActive" placeholder="Search title / company&hellip;" oninput="onFilterChange('active')">
+            <div class="filter-stats" id="statsActive">Loading&hellip;</div>
         </div>
         <table><thead><tr>
             <th class="sl-col">#</th>
             <th>Job Title</th><th>Company</th><th>Category</th><th>Website</th>
             <th>HR Contact</th><th>Applications</th><th>Type</th>
-            <th>Apply Link <button class="sort-btn" onclick="sortAppliedByExt()">&#x21D5;</button></th>
+            <th>Apply Link <button class="sort-btn" onclick="sortActiveByExt()">&#x21D5;</button></th>
             <th class="applied-col">Applied</th><th>Status</th><th>Visits</th><th>Last Seen</th>
         </tr></thead>
-        <tbody id="appliedBody"><tr><td colspan="13" class="status-msg">Loading&hellip;</td></tr></tbody></table>
+        <tbody id="activeBody"><tr><td colspan="13" class="status-msg">Loading&hellip;</td></tr></tbody></table>
         <div class="pagination-bar">
             <div class="pg-size">Rows per page:
-                <select id="pgSize-applied" onchange="changePageSize('applied', this.value)">
+                <select id="pgSize-active" onchange="changePageSize('active', this.value)">
                     <option value="10">10</option><option value="20" selected>20</option>
                     <option value="50">50</option><option value="100">100</option>
                 </select>
             </div>
             <div class="pg-nav">
-                <button id="prev-btn-applied" onclick="goPage('applied', pagination.applied.page - 1)" disabled>&#8249; Prev</button>
-                <span class="pg-info" id="page-info-applied">&ndash;</span>
-                <button id="next-btn-applied" onclick="goPage('applied', pagination.applied.page + 1)" disabled>Next &#8250;</button>
+                <button id="prev-btn-active" onclick="goPage('active', pagination.active.page - 1)" disabled>&#8249; Prev</button>
+                <span class="pg-info" id="page-info-active">&ndash;</span>
+                <button id="next-btn-active" onclick="goPage('active', pagination.active.page + 1)" disabled>Next &#8250;</button>
             </div>
         </div>
     </div>
+
     <!-- SKIPPED -->
     <div class="tab-panel" id="panel-skipped">
         <div class="filter-bar">
@@ -167,6 +139,7 @@
             </div>
         </div>
     </div>
+
     <!-- FAILED -->
     <div class="tab-panel" id="panel-failed">
         <div class="filter-bar">
@@ -195,30 +168,56 @@
             </div>
         </div>
     </div>
+
+    <!-- SUMMARY -->
+    <div class="tab-panel" id="panel-summary">
+        <div class="summary-stat-bar">
+            <div class="stat-card"><div class="stat-val" id="summaryTotalJobs">&hellip;</div><div class="stat-lbl">Total Active Jobs</div></div>
+            <div class="stat-card"><div class="stat-val" id="summaryTotalCompanies">&hellip;</div><div class="stat-lbl">Unique Companies</div></div>
+            <div class="stat-card"><div class="stat-val" id="summaryTopCount">&hellip;</div><div class="stat-lbl">Most Jobs (1 Company)</div></div>
+            <div class="stat-card" style="flex:2"><div class="stat-val" id="summaryTopCompany" style="font-size:18px;word-break:break-word">&hellip;</div><div class="stat-lbl">Top Company</div></div>
+            <div class="filter-stats" id="statsSummary" style="margin-left:auto;align-self:center">Loading&hellip;</div>
+        </div>
+        <table><thead><tr>
+            <th class="sl-col">#</th>
+            <th>Company</th>
+            <th style="width:80px;text-align:right">Jobs</th>
+            <th style="min-width:220px">Distribution</th>
+        </tr></thead>
+        <tbody id="summaryBody"><tr><td colspan="4" class="status-msg">Loading&hellip;</td></tr></tbody></table>
+    </div>
 </div>
+
 <script>
 const state = {
-    applied: { data: [] },
+    active:  { data: [] },
     skipped: { data: [] },
     failed:  { data: [] },
+    summary: { data: [] },
 };
 const pagination = {
-    applied: { page: 1, pageSize: 20, total: 0, pages: 1 },
+    active:  { page: 1, pageSize: 20, total: 0, pages: 1 },
     skipped: { page: 1, pageSize: 20, total: 0, pages: 1 },
     failed:  { page: 1, pageSize: 20, total: 0, pages: 1 },
 };
-let appliedSortExt = 'none';
+let activeSortExt = 'none';
+
 function switchTab(name) {
-    const keys = ['applied','skipped','failed'];
+    const keys = ['active','skipped','failed','summary'];
     document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', keys[i] === name));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + name).classList.add('active');
+    if      (name === 'active')  fetchActive();
+    else if (name === 'skipped') fetchSkipped();
+    else if (name === 'failed')  fetchFailed();
+    else if (name === 'summary') fetchSummary();
 }
+
 function fmt(val, fallback) {
     fallback = fallback === undefined ? 'N/A' : fallback;
     return (val !== undefined && val !== null && val !== '' && val !== 'Unknown' && val !== 'None') ? val : fallback;
 }
-function isApplied(dt) {
+function isMarkedApplied(dt) {
     return dt && dt !== 'Pending' && dt !== '' && dt !== 'Unknown' && dt !== 'None' && !String(dt).startsWith('Not Applied');
 }
 function applyLinkEl(url, isEasyApply) {
@@ -232,7 +231,7 @@ function applyLinkEl(url, isEasyApply) {
 }
 function statusBadge(status) {
     const s = (status || '').toString().trim();
-    const map = { 'Applied':'badge-applied', 'New':'badge-new', 'Skipped':'badge-skipped', 'Failed':'badge-failed' };
+    const map = { 'Active':'badge-active', 'New':'badge-new', 'Skipped':'badge-skipped', 'Failed':'badge-failed' };
     const b = document.createElement('span');
     b.className = 'badge ' + (map[s] || 'badge-new'); b.textContent = s || 'New'; return b;
 }
@@ -264,6 +263,7 @@ function td(content, cls) {
     const cell = document.createElement('td'); if (cls) cell.className = cls;
     if (content instanceof Node) cell.appendChild(content); else cell.textContent = content; return cell;
 }
+
 /* ── Pagination ── */
 function updatePaginationUI(tab) {
     const pg = pagination[tab];
@@ -279,43 +279,43 @@ function goPage(tab, newPage) {
     if (newPage < 1 || newPage > pg.pages) return;
     pg.page = newPage; fetchTab(tab);
 }
-function changePageSize(tab, size) {
-    pagination[tab].pageSize = parseInt(size); pagination[tab].page = 1; fetchTab(tab);
-}
+function changePageSize(tab, size) { pagination[tab].pageSize = parseInt(size); pagination[tab].page = 1; fetchTab(tab); }
 function onFilterChange(tab) { pagination[tab].page = 1; fetchTab(tab); }
 function fetchTab(tab) {
-    if (tab === 'applied') fetchApplied();
+    if      (tab === 'active')  fetchActive();
     else if (tab === 'skipped') fetchSkipped();
-    else fetchFailed();
+    else if (tab === 'failed')  fetchFailed();
+    else if (tab === 'summary') fetchSummary();
 }
-/* ── Applied ── */
-async function fetchApplied() {
-    const pg = pagination.applied;
+
+/* ── Active ── */
+async function fetchActive() {
+    const pg = pagination.active;
     const params = new URLSearchParams({ page: pg.page, page_size: pg.pageSize });
-    const easyOnly = document.getElementById('easyApplyOnlyFilter').checked;
-    const extOnly  = document.getElementById('externalOnlyFilter').checked;
+    const easyOnly  = document.getElementById('easyApplyOnlyFilter').checked;
+    const extOnly   = document.getElementById('externalOnlyFilter').checked;
     if (easyOnly && !extOnly)  params.set('is_easy_apply', 'true');
     if (extOnly  && !easyOnly) params.set('is_easy_apply', 'false');
     if (document.getElementById('hideRepostedFilter').checked) params.set('hide_reposted', 'true');
-    const appliedOnly = document.getElementById('appliedOnlyFilter').checked;
-    const newOnly     = document.getElementById('newOnlyFilter').checked;
-    if (appliedOnly && !newOnly) params.set('status', 'Applied');
-    if (newOnly && !appliedOnly) params.set('status', 'New');
-    const q = document.getElementById('searchApplied').value.trim();
+    const activeOnly = document.getElementById('activeOnlyFilter').checked;
+    const newOnly    = document.getElementById('newOnlyFilter').checked;
+    if (activeOnly && !newOnly) params.set('status', 'Active');
+    if (newOnly && !activeOnly) params.set('status', 'New');
+    const q = document.getElementById('searchActive').value.trim();
     if (q) params.set('search', q);
     try {
-        const res = await fetch('/applied-jobs?' + params); const json = await res.json();
-        if (json.error) { document.getElementById('cnt-applied').textContent = '!'; return; }
-        state.applied.data = json.data;
-        pagination.applied.total = json.total; pagination.applied.pages = json.pages; pagination.applied.page = json.page;
-        document.getElementById('cnt-applied').textContent = json.total;
-        renderApplied(); updatePaginationUI('applied');
-    } catch(err) { document.getElementById('cnt-applied').textContent = '!'; console.error(err); }
+        const res = await fetch('/active-jobs?' + params); const json = await res.json();
+        if (json.error) { document.getElementById('cnt-active').textContent = '!'; return; }
+        state.active.data = json.data;
+        pagination.active.total = json.total; pagination.active.pages = json.pages; pagination.active.page = json.page;
+        document.getElementById('cnt-active').textContent = json.total;
+        renderActive(); updatePaginationUI('active');
+    } catch(err) { document.getElementById('cnt-active').textContent = '!'; console.error(err); }
 }
-function renderApplied() {
-    const pg = pagination.applied; const data = state.applied.data;
-    const tbody = document.getElementById('appliedBody'); tbody.innerHTML = '';
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="13" class="status-msg">No jobs found.</td></tr>'; document.getElementById('statsApplied').textContent = 'No results'; return; }
+function renderActive() {
+    const pg = pagination.active; const data = state.active.data;
+    const tbody = document.getElementById('activeBody'); tbody.innerHTML = '';
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="13" class="status-msg">No jobs found.</td></tr>'; document.getElementById('statsActive').textContent = 'No results'; return; }
     data.forEach(function(job, i) {
         const gi = (pg.page - 1) * pg.pageSize + i + 1;
         const row = document.createElement('tr');
@@ -339,14 +339,14 @@ function renderApplied() {
         row.appendChild(typeTd);
         const extTd = document.createElement('td'); const appTd = document.createElement('td'); appTd.className = 'applied-col';
         const applyUrl = job.External_Job_link || ''; const easyApply = job.Is_Easy_Apply === true || job.Is_Easy_Apply === 'True';
-        const applied = isApplied(job.Date_Applied); const applyEl = applyLinkEl(applyUrl, easyApply);
+        const applied = isMarkedApplied(job.Date_Applied); const applyEl = applyLinkEl(applyUrl, easyApply);
         if (applied) {
             extTd.appendChild(applyEl || document.createTextNode(easyApply ? 'Easy Apply' : '\u2014'));
             appTd.innerHTML = '<span class="tick">\u2713</span>';
         } else if (applyEl) {
             const cpBtn = document.createElement('button'); cpBtn.className = 'copy-btn'; cpBtn.textContent = 'Copy';
             cpBtn.onclick = function(e) { e.preventDefault(); navigator.clipboard.writeText(applyUrl).then(function() { cpBtn.textContent = '\u2713'; cpBtn.classList.add('copied'); setTimeout(function() { cpBtn.textContent = 'Copy'; cpBtn.classList.remove('copied'); }, 2000); }); };
-            applyEl.addEventListener('click', async function() { try { const r = await fetch('/applied-jobs/' + job.Job_ID, { method: 'PUT', headers: { 'Content-Type': 'application/json' } }); if (r.ok) appTd.innerHTML = '<span class="tick">\u2713</span>'; } catch(err) { console.error(err); } });
+            applyEl.addEventListener('click', async function() { try { const r = await fetch('/active-jobs/' + job.Job_ID, { method: 'PUT', headers: { 'Content-Type': 'application/json' } }); if (r.ok) appTd.innerHTML = '<span class="tick">\u2713</span>'; } catch(err) { console.error(err); } });
             extTd.appendChild(applyEl); extTd.appendChild(cpBtn);
         } else { extTd.textContent = '\u2014'; }
         row.appendChild(extTd); row.appendChild(appTd);
@@ -355,13 +355,14 @@ function renderApplied() {
         tbody.appendChild(row);
     });
     const start = (pg.page - 1) * pg.pageSize + 1; const end = Math.min(pg.page * pg.pageSize, pg.total);
-    document.getElementById('statsApplied').textContent = 'Showing ' + start + '\u2013' + end + ' of ' + pg.total + ' jobs';
+    document.getElementById('statsActive').textContent = 'Showing ' + start + '\u2013' + end + ' of ' + pg.total + ' jobs';
 }
-function sortAppliedByExt() {
-    appliedSortExt = appliedSortExt === 'asc' ? 'desc' : 'asc';
-    state.applied.data.sort(function(a, b) { const va = a.External_Job_link || '', vb = b.External_Job_link || ''; return appliedSortExt === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va); });
-    renderApplied();
+function sortActiveByExt() {
+    activeSortExt = activeSortExt === 'asc' ? 'desc' : 'asc';
+    state.active.data.sort(function(a, b) { const va = a.External_Job_link || '', vb = b.External_Job_link || ''; return activeSortExt === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va); });
+    renderActive();
 }
+
 /* ── Skipped ── */
 async function fetchSkipped() {
     const pg = pagination.skipped;
@@ -408,6 +409,7 @@ function renderSkipped() {
     const start = (pg.page - 1) * pg.pageSize + 1; const end = Math.min(pg.page * pg.pageSize, pg.total);
     document.getElementById('statsSkipped').textContent = 'Showing ' + start + '\u2013' + end + ' of ' + pg.total + ' jobs';
 }
+
 /* ── Failed ── */
 async function fetchFailed() {
     const pg = pagination.failed;
@@ -455,10 +457,49 @@ function renderFailed() {
     const start = (pg.page - 1) * pg.pageSize + 1; const end = Math.min(pg.page * pg.pageSize, pg.total);
     document.getElementById('statsFailed').textContent = 'Showing ' + start + '\u2013' + end + ' of ' + pg.total + ' jobs';
 }
+
+/* ── Summary ── */
+async function fetchSummary() {
+    document.getElementById('summaryBody').innerHTML = '<tr><td colspan="4" class="status-msg">Loading\u2026</td></tr>';
+    document.getElementById('statsSummary').textContent = 'Loading\u2026';
+    try {
+        const res = await fetch('/active-jobs/summary'); const json = await res.json();
+        if (json.error) { document.getElementById('cnt-summary').textContent = '!'; return; }
+        state.summary.data = json.data;
+        document.getElementById('cnt-summary').textContent = json.data.length;
+        renderSummary(json.data, json.total);
+    } catch(err) { document.getElementById('cnt-summary').textContent = '!'; console.error(err); }
+}
+function renderSummary(data, total) {
+    const tbody = document.getElementById('summaryBody'); tbody.innerHTML = '';
+    document.getElementById('summaryTotalJobs').textContent      = total || 0;
+    document.getElementById('summaryTotalCompanies').textContent = data.length;
+    document.getElementById('summaryTopCount').textContent       = data.length > 0 ? data[0].count : 0;
+    document.getElementById('summaryTopCompany').textContent     = data.length > 0 ? (data[0].company || 'N/A') : 'N/A';
+    document.getElementById('statsSummary').textContent = data.length + ' companies \u00b7 ' + (total || 0) + ' total active jobs';
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="status-msg">No active jobs found.</td></tr>';
+        return;
+    }
+    const maxCount = data[0].count || 1;
+    data.forEach(function(row, i) {
+        const tr = document.createElement('tr');
+        const slTd = document.createElement('td'); slTd.className = 'sl-col'; slTd.textContent = i + 1; tr.appendChild(slTd);
+        tr.appendChild(td(fmt(row.company, 'Unknown')));
+        const cTd = document.createElement('td'); cTd.className = 'count-cell'; cTd.textContent = row.count; tr.appendChild(cTd);
+        const barTd = document.createElement('td');
+        const pct = Math.round((row.count / maxCount) * 100);
+        barTd.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;background:#e3edf7;border-radius:4px;height:10px;overflow:hidden"><div style="width:' + pct + '%;height:10px;background:#0a66c2;border-radius:4px"></div></div><span style="font-size:12px;color:#555;white-space:nowrap;min-width:36px">' + pct + '%</span></div>';
+        tr.appendChild(barTd);
+        tbody.appendChild(tr);
+    });
+}
+
 /* ── Boot ── */
-fetchApplied();
+fetchActive();
 fetchSkipped();
 fetchFailed();
+fetchSummary();
 </script>
 </body>
 </html>

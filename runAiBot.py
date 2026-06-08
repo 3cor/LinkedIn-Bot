@@ -174,6 +174,36 @@ about_company_for_ai = None # TODO extract about company for AI
 #>
 
 
+def build_keywords(search_term) -> tuple[str, str]:
+    '''
+    Converts a search_terms entry into (keywords_string, display_name) for the LinkedIn URL.
+
+    Rules:
+      - Plain str            → no quotes        → ("Software Engineer", "Software Engineer")
+      - dict, single term    → quoted            → ('"Lead Software Engineer"', '"Lead Software Engineer"')
+      - dict, multiple terms → quoted + AND/OR  → ('"Software Engineer" AND "Java"', '"Software Engineer" AND "Java"')
+
+    Returns:
+        keywords_string : str  — value passed directly as the `keywords` query param
+        display_name    : str  — human-readable label used for log messages
+    '''
+    if isinstance(search_term, str):
+        return search_term, search_term
+
+    terms    = search_term.get("terms", [])
+    operator = search_term.get("operator", "AND").upper()
+
+    if not terms:
+        return "", "(empty)"
+
+    if len(terms) == 1:
+        kw = f'"{terms[0]}"'
+    else:
+        kw = f" {operator} ".join(f'"{t}"' for t in terms)
+
+    return kw, kw
+
+
 #< Login Functions
 def is_logged_in_LN() -> bool:
     '''
@@ -673,7 +703,7 @@ def get_job_main_details(job: WebElement, blacklisted_companies: set, rejected_j
     
     # Skip if previously rejected due to blacklist or already applied
     already_applied = False
-    if company in blacklisted_companies:
+    if company.strip().lower() in blacklisted_companies:
         print_lg(f'Skipping "{title} | {company}" job (Blacklisted Company). Job ID: {job_id}!')
         skip = True
     elif job_id in rejected_jobs: 
@@ -818,7 +848,7 @@ def check_blacklist(rejected_jobs: set, job_id: str, company: str, blacklisted_c
         if company_size is not None:
             if company_size < minimum_company_size:
                 rejected_jobs.add(job_id)
-                blacklisted_companies.add(company)
+                blacklisted_companies.add(company.strip().lower())
                 raise ValueError(
                     f"Company too small: {company_size} LinkedIn employees (minimum: {minimum_company_size})\n"
                     f"Company: {company}\nAbout: {about_company_org[:300]}"
@@ -836,7 +866,7 @@ def check_blacklist(rejected_jobs: set, job_id: str, company: str, blacklisted_c
         for word in about_company_bad_words: 
             if word.lower() in about_company: 
                 rejected_jobs.add(job_id)
-                blacklisted_companies.add(company)
+                blacklisted_companies.add(company.strip().lower())
                 raise ValueError(
                     f"Blacklisted word in About Company: \"{word}\"\n"
                     f"Company: {company}\nAbout: {about_company_org[:300]}"
@@ -891,6 +921,19 @@ def get_job_description(
                 skipReason = "Found a Bad Word in About Job"
                 skip = True
                 break
+        if not skip and job_description_good_words:
+            if job_description_good_words_operator == "AND":
+                # ALL words must be present — skip if any word is missing
+                missing = [w for w in job_description_good_words if w.lower() not in jobDescriptionLow]
+                if missing:
+                    skipMessage = f'\n{jobDescription}\n\nJob description missing required good word(s): {missing}. Skipping this job!\n'
+                    skipReason = "Missing required good word(s) in Job Description"
+                    skip = True
+            else:  # "OR" — at least one word must be present
+                if not any(w.lower() in jobDescriptionLow for w in job_description_good_words):
+                    skipMessage = f'\n{jobDescription}\n\nJob description does not contain any of the required good words: {job_description_good_words}. Skipping this job!\n'
+                    skipReason = "No required good word found in Job Description"
+                    skip = True
         if not skip and security_clearance == False and ('polygraph' in jobDescriptionLow or 'clearance' in jobDescriptionLow or 'secret' in jobDescriptionLow):
             skipMessage = f'\n{jobDescription}\n\nFound "Clearance" or "Polygraph". Skipping this job!\n'
             skipReason = "Asking for Security clearance"
@@ -1737,7 +1780,7 @@ def screenshot(driver: WebDriver, job_id: str, failedAt: str) -> str:
 def submitted_jobs(job_id: str, title: str, company: str, work_location: str, work_style: str, description: str, experience_required: int | Literal['Unknown', 'Error in extraction'], 
                    skills: list[str] | Literal['In Development'], hr_name: str | Literal['Unknown'], hr_link: str | Literal['Unknown'], resume: str, 
                    reposted: bool, date_listed: datetime | Literal['Unknown'], date_applied:  datetime | Literal['Pending'], job_link: str, application_link: str, 
-                   questions_list: set | None, connect_request: Literal['In Development'], status: str = 'Applied',
+                   questions_list: set | None, connect_request: Literal['In Development'], status: str = 'Active',
                    failure_reason: str = '', mandatory_fields: str = '', screenshot_name: str = '',
                    company_website: str = 'Unknown', job_category: str = 'Unknown', num_applications: str = 'Unknown',
                    company_id: str = 'Unknown', is_easy_apply: bool = False) -> None:
@@ -1881,9 +1924,10 @@ def apply_to_jobs(search_terms: list[str]) -> None:
     # Load previously applied job IDs to avoid re-applying
     applied_jobs = get_applied_job_ids()
 
-    # Sets to track jobs we've rejected or companies we've blacklisted during this session
+    # Sets to track jobs we've rejected or companies we've blacklisted during this session.
+    # Pre-populated from config/search.py: blacklisted_company_names (case-insensitive exact match).
     rejected_jobs = set()
-    blacklisted_companies = set()
+    blacklisted_companies = {name.strip().lower() for name in blacklisted_company_names if name.strip()}
 
     # Access global variables for statistics and settings
     global current_city, failed_count, skip_count, easy_applied_count, external_jobs_count, tabs_count, pause_before_submit, pause_at_failed_question, useNewResume, all_pages_exhausted
@@ -1896,18 +1940,18 @@ def apply_to_jobs(search_terms: list[str]) -> None:
     if randomize_search_order:  shuffle(search_terms)
 
     # ========== MAIN SEARCH LOOP ==========
-    # Iterate through each search term (e.g., "Software Engineer", "Java Developer")
+    # Iterate through each search term (e.g., "Software Engineer", {"terms":["Java","BE"],"operator":"AND"})
     for searchTerm in search_terms:
         # ---------- SEARCH URL CONSTRUCTION ----------
-        # Build the LinkedIn job search URL with the current search term
-        #search_url = f"https://www.linkedin.com/jobs/search/?keywords={searchTerm}"
-        search_url = f"https://www.linkedin.com/jobs/search/?keywords=\"{searchTerm}\""
-
+        # Build the LinkedIn keywords string from the configured search term entry.
+        # Plain str → no quotes; dict with operator → "Term1" AND/OR "Term2"
+        keywords, displayName = build_keywords(searchTerm)
+        search_url = f"https://www.linkedin.com/jobs/search/?keywords={keywords}"
 
         # Navigate to the search results page
         driver.get(search_url)
         print_lg("\n________________________________________________________________________________________________________________________\n")
-        print_lg(f'\n>>>> Now searching for "{searchTerm}" <<<<\n\n')
+        print_lg(f'\n>>>> Now searching for {displayName} <<<<\n\n')
 
         # ---------- APPLY ADDITIONAL FILTERS ----------
         # Apply user-configured filters (location, date posted, experience level, etc.)
@@ -2004,7 +2048,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                         except:
                             pass  # No footer state — blacklisted / rejected job in listing
                         # Record new blacklisted-company jobs that weren't "Applied" on LinkedIn
-                        if not recorded and company in blacklisted_companies:
+                        if not recorded and company.strip().lower() in blacklisted_companies:
                             job_link_b = "https://www.linkedin.com/jobs/view/" + job_id
                             skipped_job(job_id, job_link_b, title, company, work_location, work_style,
                                         "N/A", "Unknown",
@@ -2052,7 +2096,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             submitted_jobs(job_id, title, company, work_location, work_style,
                                            "Unknown", "Unknown", "Unknown", "Unknown", "Unknown",
                                            "Unknown", False, "Unknown", datetime.now(), _jl, _jl,
-                                           None, "In Development", status="Applied", is_easy_apply=False)
+                                           None, "In Development", status="Active", is_easy_apply=False)
                             applied_jobs.add(job_id)
                             easy_applied_count += 1
                             continue

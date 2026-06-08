@@ -72,15 +72,15 @@ def _map_job_doc(doc):
         'Visits_Count':           doc.get('visits_count', 1),
         'Last_Seen':              str(doc.get('last_seen', '')),
     }
-@app.route('/applied-jobs', methods=['GET'])
-def get_applied_jobs():
-    """Paginated applied/captured jobs. Supports: page, page_size, is_easy_apply, status, hide_reposted, search."""
+@app.route('/active-jobs', methods=['GET'])
+def get_active_jobs():
+    """Paginated active/captured jobs. Supports: page, page_size, is_easy_apply, status, hide_reposted, search."""
     try:
         db = get_mongo_db()
         if db is None:
             return jsonify({"error": "MongoDB not available"}), 503
         page, page_size = _parse_pagination()
-        query = {"status": {"$in": ["Applied", "New", "", None]}}
+        query = {"status": {"$in": ["Active", "New", "", None]}}
         is_easy = request.args.get('is_easy_apply')
         if is_easy == 'true':
             query['is_easy_apply'] = True
@@ -89,7 +89,7 @@ def get_applied_jobs():
         if request.args.get('hide_reposted') == 'true':
             query['reposted'] = {"$ne": True}
         status_filter = request.args.get('status', '').strip()
-        if status_filter in ('Applied', 'New'):
+        if status_filter in ('Active', 'New'):
             query['status'] = status_filter
         search = request.args.get('search', '').strip()
         if search:
@@ -100,8 +100,22 @@ def get_applied_jobs():
         return _paginated_response(db, query, page, page_size)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-@app.route('/applied-jobs/<job_id>', methods=['PUT'])
-def update_applied_date(job_id):
+@app.route('/active-jobs/summary', methods=['GET'])
+def get_active_jobs_summary():
+    """Returns per-company job counts for active jobs, sorted by count descending."""
+    try:
+        db = get_mongo_db()
+        if db is None:
+            return jsonify({"error": "MongoDB not available"}), 503
+        query = {"status": {"$in": ["Active", "New", "", None]}}
+        from modules.db import get_company_job_counts
+        data = get_company_job_counts(db, query)
+        total = sum(d['count'] for d in data)
+        return jsonify({"data": data, "total": total})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+@app.route('/active-jobs/<job_id>', methods=['PUT'])
+def update_active_date(job_id):
     """Updates the date_applied field for a job."""
     try:
         new_date = datetime.now()
@@ -155,3 +169,4 @@ def get_skipped_jobs():
         return jsonify({"error": str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True)
+
