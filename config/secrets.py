@@ -21,8 +21,8 @@ version:    24.12.3.10.30
 # username = ""       # Enter your username in the quotes
 # password = ""       # Enter your password in the quotes
 
-username = "venkat.singi.j2ee@gmail.com"  # Enter your username in the quotes
-password = "Dec!@$2026"
+username = ""  # Enter your username in the quotes
+password = ""
 
 ## Artificial Intelligence (Beta Not-Recommended)
 # Use AI

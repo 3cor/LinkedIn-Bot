@@ -35,9 +35,9 @@ version:    26.01.20.5.08
 #
 # Valid operator values: "AND", "OR"  (case-insensitive)
 search_terms = [
-    #"Software Engineer",                                                      # plain → no quotes
+    "Lead Software Engineer",                                                      # plain → no quotes
     # {"terms": ["Software Engineer", "Java"], "operator": "AND"},           # → "Software Engineer" AND "Java"
-     {"terms": ["Software Engineer", "Backend Engineer"], "operator": "OR"},# → "Software Engineer" OR "Backend Engineer"
+    # {"terms": ["Software Engineer", "Backend Engineer"], "operator": "OR"},# → "Software Engineer" OR "Backend Engineer"
     # {"terms": ["Lead Software Engineer"], "operator": "AND"},              # single term → "Lead Software Engineer"
 ]
 
