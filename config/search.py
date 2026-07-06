@@ -35,10 +35,21 @@ version:    26.01.20.5.08
 #
 # Valid operator values: "AND", "OR"  (case-insensitive)
 search_terms = [
-    "Lead Software Engineer",                                                      # plain → no quotes
-    # {"terms": ["Software Engineer", "Java"], "operator": "AND"},           # → "Software Engineer" AND "Java"
-    # {"terms": ["Software Engineer", "Backend Engineer"], "operator": "OR"},# → "Software Engineer" OR "Backend Engineer"
-    # {"terms": ["Lead Software Engineer"], "operator": "AND"},              # single term → "Lead Software Engineer"
+    #"Lead Software Engineer",                                                      # plain → no quotes
+    #{"terms": ["Lead", "Software Engineer"], "operator": "AND"},           # → "Software Engineer" AND "Java"
+    {"terms": ["Java", "Backend"], "operator": "AND"},# → "Software Engineer" OR "Backend Engineer"
+    #{"terms": ["software engineer","sr"], "operator": "AND"},
+    #{"terms": ["Software Engineer","Senior"], "operator": "AND"},
+    {"terms": ["Tech","Lead"], "operator": "AND"},
+    {"terms": ["Tech","Java"], "operator": "AND"},
+    #{"terms": ["Principal","Engineer"], "operator": "AND"},
+    {"terms": ["fullstack","engineer"], "operator": "AND"},
+    {"terms": ["fullstack","java"], "operator": "AND"},
+    {"terms": ["full-stack","engineer"], "operator": "AND"},
+    {"terms": ["full-stack","Java"], "operator": "AND"},
+    {"terms": ["Java","Engineer"], "operator": "AND"},
+    {"terms": ["Java"], "operator": "AND"},
+    #{"terms": ["Staff", "Engineer"], "operator": "AND"},  #single term → "Lead Software Engineer"
 ]
 
 #  "Python Developer", "Selenium Developer", "React Developer", "Java Developer", "Front End Developer", "Full Stack Developer", "Web Developer", "Nodejs Developer"
@@ -71,7 +82,7 @@ This is below format: QUESTION = VALID_ANSWER
 '''
 
 sort_by = "Most recent"            # "Most recent", "Most relevant" or ("" to not select) - Set to "Most recent" for optimal filtering
-date_posted = "Past 24 hours"         # "Any time", "Past month", "Past week", "Past 24 hours" or ("" to not select) - SAFE MODE: Set to Past week
+date_posted = "Past week"        # "Any time", "Past month", "Past week", "Past 24 hours" or ("" to not select) - SAFE MODE: Set to Past week
 salary = ""                        # "$40,000+", "$60,000+", "$80,000+", "$100,000+", "$120,000+", "$140,000+", "$160,000+", "$180,000+", "$200,000+"
 
 
@@ -104,7 +115,9 @@ pause_after_filters = False         # True or False, Note: True or False are cas
 
 # Exact company names to always skip — matched case-insensitively against the company name shown in the job listing.
 # These are applied immediately when the job card is loaded, before any About Company check.
-blacklisted_company_names = ["Tata Consultancy Services", "Infosys", "Wipro","Jobs via Dice","DataAnnotation","TEKsystems","Cognizant","ZipRecruiter"]      # (dynamic multiple search) or leave empty as []. Ex: ["Tata Consultancy Services", "Infosys", "Wipro"]
+blacklisted_company_names = ["FullStack","HCLTech","Anblicks","AgileEngine","Turing","Tata Consultancy Services", "Infosys", "Wipro","Agoda","Jobs via Dice","DataAnnotation","TEKsystems","Cognizant","ZipRecruiter","Leidos","Elsevier","Jobs via eFinancialCareers","oneZero Financial Systems","Capgemini","Lorvenk Technologies","Synechron","Programmers.io","BeaconFire Inc.","BeaconFire","Arkhya Tech. Inc.","Google","Palo Alto Networks"]      # (dynamic multiple search) or leave empty as []. Ex: ["Tata Consultancy Services", "Infosys", "Wipro"]
+
+
 '''
 Note: Company names must match the text shown in the LinkedIn job card (the subtitle line, before the ·).
 Matching is case-insensitive. To skip by keyword in the About Company section instead, use `about_company_bad_words` below.
@@ -118,7 +131,7 @@ about_company_good_words = []      # (dynamic multiple search) or leave empty as
 
 # Minimum company size filter (employees on LinkedIn)
 # Set to 0 to disable this filter, or set a minimum number to only apply to companies with at least that many employees
-minimum_company_size = 150       # Only apply to companies with 300+ employees on LinkedIn. Set to 0 to disable. Examples: 0, 300, 500, 1000, 5000, 10000
+minimum_company_size = 300       # Only apply to companies with 300+ employees on LinkedIn. Set to 0 to disable. Examples: 0, 300, 500, 1000, 5000, 10000
 '''
 Note: This checks the "X employees on LinkedIn" count shown in the About Company section, NOT the total company size.
 Format example: "24,017 employees on LinkedIn" or "24,017 on LinkedIn"
@@ -129,7 +142,7 @@ The bot will skip companies below your minimum_company_size threshold based on t
 '''
 
 # Avoid applying to these companies if they have these bad words in their 'Job Description' section...  (In development)
-bad_words = ["No Sponsorship","C2C", "Corp2Corp", "CNC"]                     # (dynamic multiple search) or leave empty as []. Case Insensitive. Ex: ["word_1", "phrase 1", "word word", "polygraph", "US Citizenship", "Security Clearance"]
+bad_words = ["OPT, CPT","without sponsorship","will not provide immigration sponsorship","sponsorship of an employment Visa at this time","We are unable to sponsor","Visa Sponsorship (first time sponsorship or transfer) is NOT Available","This is not a position for which sponsorship will be provided","Visa sponsorship is not available","unable to offer employment sponsorship","U.S. citizenship is required","TS/SCI Clearance","Immigration sponsorship is not available","does not offer sponsorship", "no sponsorship","C2C", "Corp2Corp", "CNC","will not sponsor", "F-1 OPT","F-1 STEM OPT","F-1 CPT","no visa sponsorship","not eligible for visa sponsorship","will not provide sponsorship"]                   # (dynamic multiple search) or leave empty as []. Case Insensitive. Ex: ["word_1", "phrase 1", "word word", "polygraph", "US Citizenship", "Security Clearance"]
 
 # Only apply to jobs whose 'Job Description' contains these required good words. Leave empty as [] to disable this check.
 # Case Insensitive. Ex: ["Java", "Spring Boot"] — see job_description_good_words_operator below for AND/OR logic.

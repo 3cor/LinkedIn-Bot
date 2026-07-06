@@ -1949,14 +1949,27 @@ def apply_to_jobs(search_terms: list[str]) -> None:
         search_url = f"https://www.linkedin.com/jobs/search/?keywords={keywords}"
 
         # Navigate to the search results page
-        driver.get(search_url)
+        try:
+            driver.get(search_url)
+        except (NoSuchWindowException, WebDriverException, ConnectionResetError) as _nav_err:
+            print_lg(f"[search] Fatal browser error loading '{displayName}': {_nav_err} — stopping bot.")
+            return
+        except Exception as _nav_err:
+            print_lg(f"[search] Timeout/error loading '{displayName}': {_nav_err} — skipping to next term.")
+            continue
         print_lg("\n________________________________________________________________________________________________________________________\n")
         print_lg(f'\n>>>> Now searching for {displayName} <<<<\n\n')
 
         # ---------- APPLY ADDITIONAL FILTERS ----------
         # Apply user-configured filters (location, date posted, experience level, etc.)
         # These are set in config/search.py
-        apply_filters()
+        try:
+            apply_filters()
+        except (NoSuchWindowException, WebDriverException, ConnectionResetError) as _flt_err:
+            print_lg(f"[filters] Fatal browser error for '{displayName}': {_flt_err} — stopping bot.")
+            return
+        except Exception as _flt_err:
+            print_lg(f"[filters] Error for '{displayName}': {_flt_err} — continuing without filters.")
 
         current_count = 0
         try:
@@ -2015,6 +2028,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                         # Could fail if job element is stale or already applied
                         print_lg(f"Failed to get job details (possibly already applied or stale element): {e}")
                         continue
+
 
                     # ---------- HANDLE ALREADY APPLIED JOBS ----------
                     # Capture already-applied jobs without clicking on them
@@ -2114,9 +2128,9 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                         _btn = driver.find_element(By.XPATH,
                             "//button[@id='jobs-apply-button-id' and contains(@aria-label,'Easy Apply')]")
                         is_easy_apply = True
-                        print_lg(f"  [apply detect] Easy Apply detected ? is_easy_apply=True | aria-label='{_btn.get_attribute('aria-label')}'")
-                    except NoSuchElementException:
-                        print_lg("  [easy apply not-detected] No Easy Apply button found ? is_easy_apply=False")
+                        print_lg(f"  [apply detect] Easy Apply detected → is_easy_apply=True | aria-label='{_btn.get_attribute('aria-label')}'")
+                    except Exception:
+                        print_lg("  [easy apply not-detected] No Easy Apply button found → is_easy_apply=False")
 
                     # Already Applied — success badge
                     try:
@@ -2124,7 +2138,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             "//div[contains(@class,'artdeco-inline-feedback--success')]")
                         is_already_applied = True
                         print_lg("  [apply detect] Already Applied (success badge)")
-                    except NoSuchElementException:
+                    except Exception:
                         pass
 
                     if not is_already_applied:
@@ -2133,7 +2147,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             driver.find_element(By.XPATH, "//a[@id='jobs-apply-see-application-link']")
                             is_already_applied = True
                             print_lg("  [apply detect] Already Applied (see-application link)")
-                        except NoSuchElementException:
+                        except Exception:
                             pass
 
                     application_link = ''
@@ -2175,10 +2189,21 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                         skip_count += 1
                         continue
                     except Exception as e:
-                        print_lg("Failed to scroll to About Company!")
-                        # print_lg(e)
-
-
+                        _reason = f"Failed to load job page / About Company: {type(e).__name__}: {str(e)[:200]}"
+                        print_lg(_reason)
+                        try:
+                            skipped_job(job_id, job_link, title, company, work_location, work_style,
+                                        resume, date_listed, skip_reason=_reason,
+                                        company_id=company_id, company_website=company_website,
+                                        job_category=job_category, num_applications=num_applications,
+                                        screenshot_name=screenshot_name, application_link=application_link,
+                                        reposted=reposted, is_easy_apply=is_easy_apply)
+                            applied_jobs.add(job_id)
+                            rejected_jobs.add(job_id)
+                            skip_count += 1
+                        except Exception as _se:
+                            print_lg(f"  Could not save skipped job {job_id}: {_se}")
+                        continue
 
                     # Hiring Manager info
                     try:
@@ -2308,7 +2333,6 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                     if is_easy_apply:
                         easy_applied_count += 1
                     applied_jobs.add(job_id)
-
 
 
                 # Switching to next page
@@ -2502,12 +2526,23 @@ def main() -> None:
                 date_options = ["Any time", "Past month", "Past week", "Past 24 hours"]
                 global date_posted
                 date_posted = date_options[date_options.index(date_posted)+1 if date_options.index(date_posted)+1 > len(date_options) else -1] if stop_date_cycle_at_24hr else date_options[0 if date_options.index(date_posted)+1 >= len(date_options) else date_options.index(date_posted)+1]
-            if alternate_sortby:
-                global sort_by
-                sort_by = "Most recent" if sort_by == "Most relevant" else "Most relevant"
+            try:
+                if alternate_sortby:
+                    global sort_by
+                    sort_by = "Most recent" if sort_by == "Most relevant" else "Most relevant"
+                    total_runs = run(total_runs)
+                    sort_by = "Most recent" if sort_by == "Most relevant" else "Most relevant"
                 total_runs = run(total_runs)
-                sort_by = "Most recent" if sort_by == "Most relevant" else "Most relevant"
-            total_runs = run(total_runs)
+            except (NoSuchWindowException, WebDriverException, ConnectionResetError) as _run_fatal:
+                print_lg(f"⚠️ Fatal browser error in run {total_runs}: {_run_fatal} — stopping.")
+                raise
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as _run_err:
+                print_lg(f"⚠️ Run {total_runs} failed: {type(_run_err).__name__}: {_run_err}")
+                print_lg("Sleeping 30 s then retrying...")
+                sleep(30)
+                # do NOT increment total_runs — retry the same cycle number
             if dailyEasyApplyLimitReached:
                 break
         
