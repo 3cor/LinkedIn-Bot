@@ -876,6 +876,43 @@ def check_blacklist(rejected_jobs: set, job_id: str, company: str, blacklisted_c
     return rejected_jobs, blacklisted_companies, jobs_top_card
 
 
+def extract_tertiary_info() -> tuple:
+    """
+    Parse the LinkedIn tertiary description container:
+      "King of Prussia, PA · 1 week ago · 50 people clicked apply"
+
+    Returns (posted_city: str, posted_duration: str, people_applied: int | None)
+      - people_applied is an int when the count is parseable, None otherwise.
+    """
+    posted_city = "Unknown"
+    posted_duration = "Unknown"
+    people_applied = None
+    try:
+        tertiary_el = driver.find_element(
+            By.CLASS_NAME,
+            "job-details-jobs-unified-top-card__tertiary-description-container"
+        )
+        full_text = tertiary_el.text
+        # Take only the first line — strips <p> content ("Promoted by hirer", etc.)
+        first_line = full_text.split('\n')[0].strip()
+        parts = [p.strip() for p in first_line.split('·') if p.strip()]
+        if parts:
+            posted_city = parts[0]
+        if len(parts) >= 2:
+            dur = parts[1].strip()
+            # Strip leading "Reposted" if present
+            dur = re.sub(r'(?i)^reposted\s*', '', dur).strip()
+            posted_duration = dur
+        if len(parts) >= 3:
+            apps_text = parts[2].strip()
+            m = re.search(r'\d+', apps_text)
+            if m:
+                people_applied = int(m.group())
+        print_lg(f"  [tertiary] city='{posted_city}'  duration='{posted_duration}'  people_applied={people_applied}")
+    except Exception as e:
+        print_lg(f"  [tertiary] extraction failed: {e}")
+    return posted_city, posted_duration, people_applied
+
 
 # Function to extract years of experience required from About Job
 def extract_years_of_experience(text: str) -> int:
@@ -1673,7 +1710,10 @@ def skipped_job(job_id: str, job_link: str, title: str, company: str,
                 screenshot_name: str = "Not Available",
                 application_link: str = '',
                 reposted: bool = False,
-                is_easy_apply: bool = False) -> None:
+                is_easy_apply: bool = False,
+                posted_city: str = 'Unknown',
+                posted_duration: str = 'Unknown',
+                people_applied = None) -> None:
     '''
     Records a skipped job with full details into the linkedin-jobs collection.
     '''
@@ -1722,7 +1762,9 @@ def failed_job(job_id: str, job_link: str, resume: str, date_listed, error: str,
                skills = 'Unknown', hr_name: str = 'Unknown', hr_link: str = 'Unknown',
                company_id: str = 'Unknown', company_website: str = 'Unknown',
                job_category: str = 'Unknown', num_applications: str = 'Unknown',
-               reposted: bool = False, is_easy_apply: bool = False) -> None:
+               reposted: bool = False, is_easy_apply: bool = False,
+               posted_city: str = 'Unknown', posted_duration: str = 'Unknown',
+               people_applied = None) -> None:
     '''
     Records a failed job attempt with full job details into the linkedin-jobs collection.
     '''
@@ -1757,6 +1799,9 @@ def failed_job(job_id: str, job_link: str, resume: str, date_listed, error: str,
             "stack_trace":         str(exception),
             "screenshot":          str(screenshot_name),
             "status":              "Failed",
+            "posted_city":         str(posted_city),
+            "posted_duration":     str(posted_duration),
+            "people_applied":      people_applied if isinstance(people_applied, int) else None,
         })
     except Exception as e:
         print_lg(f"?? MongoDB failed_job failed: {e}")
@@ -1783,7 +1828,9 @@ def submitted_jobs(job_id: str, title: str, company: str, work_location: str, wo
                    questions_list: set | None, connect_request: Literal['In Development'], status: str = 'Active',
                    failure_reason: str = '', mandatory_fields: str = '', screenshot_name: str = '',
                    company_website: str = 'Unknown', job_category: str = 'Unknown', num_applications: str = 'Unknown',
-                   company_id: str = 'Unknown', is_easy_apply: bool = False) -> None:
+                   company_id: str = 'Unknown', is_easy_apply: bool = False,
+                   posted_city: str = 'Unknown', posted_duration: str = 'Unknown',
+                   people_applied = None) -> None:
     '''
     Records an applied (or data-captured) job into the linkedin-jobs collection.
     '''
@@ -1820,6 +1867,9 @@ def submitted_jobs(job_id: str, title: str, company: str, work_location: str, wo
             "failure_reason":      str(failure_reason),
             "mandatory_fields":    str(mandatory_fields),
             "screenshot":          str(screenshot_name),
+            "posted_city":         str(posted_city),
+            "posted_duration":     str(posted_duration),
+            "people_applied":      people_applied if isinstance(people_applied, int) else None,
         })
     except Exception as e:
         print_lg(f"?? MongoDB submitted_jobs failed: {e}")
@@ -2247,6 +2297,19 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                         print_lg("Failed to calculate the date posted!",e)
 
 
+                    # Extract posted city, duration, and people-applied from tertiary description
+                    try:
+                        posted_city, posted_duration, people_applied = extract_tertiary_info()
+                        # If duration wasn't in tertiary container, fall back to time_posted_text
+                        if posted_duration == "Unknown":
+                            try:
+                                posted_duration = time_posted_text.strip()
+                            except Exception:
+                                pass
+                    except Exception as _te:
+                        print_lg(f"  [tertiary] top-level failed: {_te}")
+
+
                     description, experience_required, skip, reason, message = get_job_description()
                     if skip:
                         print_lg(message)
@@ -2259,7 +2322,9 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                     screenshot_name=screenshot_name,
                                     application_link=application_link,
                                     reposted=reposted,
-                                    is_easy_apply=is_easy_apply)
+                                    is_easy_apply=is_easy_apply,
+                                    posted_city=posted_city, posted_duration=posted_duration,
+                                    people_applied=people_applied)
                         applied_jobs.add(job_id)
                         rejected_jobs.add(job_id)
                         skip_count += 1
@@ -2326,7 +2391,9 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                    status=job_status,
                                    company_website=company_website, job_category=job_category,
                                    num_applications=num_applications, company_id=company_id,
-                                   is_easy_apply=is_easy_apply)
+                                   is_easy_apply=is_easy_apply,
+                                   posted_city=posted_city, posted_duration=posted_duration,
+                                   people_applied=people_applied)
 
                     print_lg(f'Job processed: "{title} | {company}" (ID: {job_id}) — applied: {date_applied}')
                     current_count += 1

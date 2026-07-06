@@ -265,6 +265,19 @@ def update_job_date(db, job_id: str, new_date: datetime) -> bool:
         return False
 
 
+def delete_job(db, job_id: str) -> bool:
+    """
+    Delete a job document from linkedin-jobs by job_id.
+    Returns True if a document was deleted, False if not found.
+    """
+    try:
+        result = db[COLLECTION].delete_one({"job_id": str(job_id)})
+        return result.deleted_count > 0
+    except PyMongoError as e:
+        print(f"⚠️ MongoDB: Failed to delete job '{job_id}': {e}")
+        return False
+
+
 def get_company_job_counts(db, query: dict = None) -> list:
     """
     Return per-company job counts for jobs matching `query`, sorted by count descending.

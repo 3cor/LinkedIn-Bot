@@ -6,7 +6,7 @@
         *, *::before, *::after { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
         .topbar { background: #0a66c2; color: white; padding: 14px 24px; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
         .tabs { display: flex; gap: 4px; margin-bottom: 0; border-bottom: 2px solid #0a66c2; }
         .tab-btn { padding: 10px 22px; border: none; background: #dce8f5; color: #0a66c2; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 14px; font-weight: bold; transition: background 0.2s; }
         .tab-btn:hover { background: #b8d4ef; }
@@ -15,11 +15,14 @@
         .tab-btn:not(.active) .tab-count { background: rgba(10,102,194,0.18); }
         .tab-panel { display: none; background: white; border-radius: 0 6px 6px 6px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .tab-panel.active { display: block; }
-        .filter-bar { display: flex; align-items: center; gap: 20px; padding: 12px 16px; background: #f4f6f8; border-radius: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .filter-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f4f6f8; border-radius: 6px; margin-bottom: 14px; flex-wrap: wrap; }
         .filter-label { font-weight: bold; font-size: 13px; }
         .filter-option { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
         .filter-stats { margin-left: auto; font-size: 13px; color: #666; }
-        input[type="text"].search-box { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; min-width: 200px; }
+        input[type="text"].search-box { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; min-width: 180px; }
+        input[type="text"].city-box  { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; width: 130px; }
+        input[type="number"].people-box { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; width: 100px; }
+        select.dur-select { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer; }
         table { border-collapse: collapse; width: 100%; font-size: 13px; }
         th, td { border: 1px solid #ddd; padding: 9px 11px; text-align: left; vertical-align: top; }
         th { background: #f4f4f4; font-weight: bold; white-space: nowrap; }
@@ -39,6 +42,8 @@
         .copy-btn { background: #0a66c2; color: white; border: none; padding: 3px 8px; margin-left: 6px; cursor: pointer; border-radius: 3px; font-size: 11px; }
         .copy-btn:hover { background: #084fa1; }
         .copy-btn.copied { background: #4caf50; }
+        .delete-btn { background: #fff; color: #c62828; border: 1px solid #c62828; padding: 3px 7px; cursor: pointer; border-radius: 3px; font-size: 14px; line-height: 1; }
+        .delete-btn:hover { background: #c62828; color: white; }
         .tick { color: #4caf50; font-weight: bold; font-size: 16px; }
         .sort-btn { background: none; border: none; cursor: pointer; padding: 0 4px; font-size: 12px; color: #0a66c2; }
         .reason-cell { max-width: 280px; word-break: break-word; }
@@ -86,14 +91,23 @@
             <label class="filter-option"><input type="checkbox" id="activeOnlyFilter" onchange="onFilterChange('active')"> Active Only</label>
             <label class="filter-option"><input type="checkbox" id="newOnlyFilter" onchange="onFilterChange('active')"> New Only</label>
             <input type="text" class="search-box" id="searchActive" placeholder="Search title / company&hellip;" oninput="onFilterChange('active')">
+            <input type="text" class="city-box" id="cityFilter" placeholder="City / State&hellip;" title="Filter by posted city" oninput="onFilterChange('active')">
+            <select class="dur-select" id="durationFilter" onchange="onFilterChange('active')" title="Filter by posting age">
+                <option value="">Any Duration</option>
+                <option value="hours">Posted within hours</option>
+                <option value="days">Posted within days</option>
+                <option value="weeks">Posted within weeks</option>
+                <option value="months">Posted within months</option>
+            </select>
+            <input type="number" class="people-box" id="minPeopleFilter" placeholder="Min Applied" title="Minimum people who clicked apply" min="0" oninput="onFilterChange('active')">
             <div class="filter-stats" id="statsActive">Loading&hellip;</div>
         </div>
         <table><thead><tr>
             <th class="sl-col">#</th>
-            <th>Job Title</th><th>Company</th><th>Category</th><th>Website</th>
-            <th>HR Contact</th><th>Applications</th><th>Type</th>
-            <th>Apply Link <button class="sort-btn" onclick="sortActiveByExt()">&#x21D5;</button></th>
+            <th>Job Title</th><th>Company</th>
+            <th>HR Contact</th><th>Type</th>
             <th class="applied-col">Applied</th><th>Status</th><th>Visits</th><th>Last Seen</th>
+            <th>City</th><th>Duration</th><th>People Applied</th><th>Action</th>
         </tr></thead>
         <tbody id="activeBody"><tr><td colspan="13" class="status-msg">Loading&hellip;</td></tr></tbody></table>
         <div class="pagination-bar">
@@ -120,11 +134,12 @@
         </div>
         <table><thead><tr>
             <th class="sl-col">#</th>
-            <th>Job Title</th><th>Company</th><th>Location / Style</th><th>Category</th>
-            <th>Skip Reason</th><th>Experience Required</th><th>Skills</th><th>HR Contact</th>
-            <th>Type</th><th>Apply Link</th><th>Date Skipped</th><th>Visits</th><th>Last Seen</th>
+            <th>Job Title</th><th>Company</th><th>Location / Style</th>
+            <th>Skip Reason</th><th>HR Contact</th>
+            <th>Type</th><th>Date Skipped</th><th>Visits</th><th>Last Seen</th>
+            <th>Action</th>
         </tr></thead>
-        <tbody id="skippedBody"><tr><td colspan="14" class="status-msg">Loading&hellip;</td></tr></tbody></table>
+        <tbody id="skippedBody"><tr><td colspan="11" class="status-msg">Loading&hellip;</td></tr></tbody></table>
         <div class="pagination-bar">
             <div class="pg-size">Rows per page:
                 <select id="pgSize-skipped" onchange="changePageSize('skipped', this.value)">
@@ -149,11 +164,12 @@
         </div>
         <table><thead><tr>
             <th class="sl-col">#</th>
-            <th>Job Title</th><th>Company</th><th>Location / Style</th><th>Category</th>
-            <th>Error / Reason</th><th>Experience Required</th><th>Skills</th><th>HR Contact</th>
-            <th>Type</th><th>Apply Link</th><th>Date Tried</th><th>Resume</th><th>Visits</th><th>Last Seen</th>
+            <th>Job Title</th><th>Company</th><th>Location / Style</th>
+            <th>Error / Reason</th><th>HR Contact</th>
+            <th>Type</th><th>Date Tried</th><th>Resume</th><th>Visits</th><th>Last Seen</th>
+            <th>Action</th>
         </tr></thead>
-        <tbody id="failedBody"><tr><td colspan="15" class="status-msg">Loading&hellip;</td></tr></tbody></table>
+        <tbody id="failedBody"><tr><td colspan="12" class="status-msg">Loading&hellip;</td></tr></tbody></table>
         <div class="pagination-bar">
             <div class="pg-size">Rows per page:
                 <select id="pgSize-failed" onchange="changePageSize('failed', this.value)">
@@ -200,7 +216,7 @@ const pagination = {
     skipped: { page: 1, pageSize: 20, total: 0, pages: 1 },
     failed:  { page: 1, pageSize: 20, total: 0, pages: 1 },
 };
-let activeSortExt = 'none';
+let activeSortExt = 'none'; // kept for compatibility
 
 function switchTab(name) {
     const keys = ['active','skipped','failed','summary'];
@@ -263,6 +279,29 @@ function td(content, cls) {
     const cell = document.createElement('td'); if (cls) cell.className = cls;
     if (content instanceof Node) cell.appendChild(content); else cell.textContent = content; return cell;
 }
+function makeDeleteBtn(jobId, tab) {
+    const btn = document.createElement('button');
+    btn.className = 'delete-btn'; btn.title = 'Delete this job'; btn.innerHTML = '&#x1F5D1;';
+    btn.onclick = function() { deleteJob(jobId, tab); };
+    return btn;
+}
+
+/* ── Delete job ── */
+async function deleteJob(jobId, tab) {
+    if (!confirm('Delete this job from MongoDB? This cannot be undone.')) return;
+    try {
+        const res = await fetch('/jobs/' + jobId, { method: 'DELETE' });
+        if (res.ok) {
+            fetchTab(tab);
+        } else {
+            const j = await res.json();
+            alert('Delete failed: ' + (j.error || 'Unknown error'));
+        }
+    } catch(err) {
+        console.error(err);
+        alert('Delete failed: ' + err.message);
+    }
+}
 
 /* ── Pagination ── */
 function updatePaginationUI(tab) {
@@ -303,6 +342,12 @@ async function fetchActive() {
     if (newOnly && !activeOnly) params.set('status', 'New');
     const q = document.getElementById('searchActive').value.trim();
     if (q) params.set('search', q);
+    const city = document.getElementById('cityFilter').value.trim();
+    if (city) params.set('posted_city', city);
+    const durType = document.getElementById('durationFilter').value;
+    if (durType) params.set('posted_duration_type', durType);
+    const minPeople = document.getElementById('minPeopleFilter').value.trim();
+    if (minPeople) params.set('min_people_applied', minPeople);
     try {
         const res = await fetch('/active-jobs?' + params); const json = await res.json();
         if (json.error) { document.getElementById('cnt-active').textContent = '!'; return; }
@@ -322,14 +367,9 @@ function renderActive() {
         const sl = document.createElement('td'); sl.className = 'sl-col'; sl.textContent = gi; row.appendChild(sl);
         row.appendChild(td(linkEl(job.Job_Link, job.Title)));
         row.appendChild(td(fmt(job.Company)));
-        row.appendChild(td(fmt(job.Job_Category)));
-        const wTd = document.createElement('td');
-        wTd.appendChild(linkEl(job.Company_Website && job.Company_Website !== 'Unknown' ? job.Company_Website : '', 'Website'));
-        row.appendChild(wTd);
         const hrTd = document.createElement('td');
         hrTd.appendChild(job.HR_Name && job.HR_Name !== 'Unknown' ? linkEl(job.HR_Link, job.HR_Name) : document.createTextNode('N/A'));
         row.appendChild(hrTd);
-        row.appendChild(td(fmt(job.Number_of_Applications)));
         const typeTd = document.createElement('td');
         if (job.Is_Easy_Apply === true || job.Is_Easy_Apply === 'True') { const b = document.createElement('span'); b.className = 'badge badge-easy-apply'; b.textContent = 'Easy Apply'; typeTd.appendChild(b); }
         if (job.Re_posted === true || job.Re_posted === 'True') {
@@ -337,30 +377,25 @@ function renderActive() {
             const b = document.createElement('span'); b.className = 'badge badge-reposted'; b.textContent = 'Reposted'; typeTd.appendChild(b);
         }
         row.appendChild(typeTd);
-        const extTd = document.createElement('td'); const appTd = document.createElement('td'); appTd.className = 'applied-col';
-        const applyUrl = job.External_Job_link || ''; const easyApply = job.Is_Easy_Apply === true || job.Is_Easy_Apply === 'True';
-        const applied = isMarkedApplied(job.Date_Applied); const applyEl = applyLinkEl(applyUrl, easyApply);
-        if (applied) {
-            extTd.appendChild(applyEl || document.createTextNode(easyApply ? 'Easy Apply' : '\u2014'));
-            appTd.innerHTML = '<span class="tick">\u2713</span>';
-        } else if (applyEl) {
-            const cpBtn = document.createElement('button'); cpBtn.className = 'copy-btn'; cpBtn.textContent = 'Copy';
-            cpBtn.onclick = function(e) { e.preventDefault(); navigator.clipboard.writeText(applyUrl).then(function() { cpBtn.textContent = '\u2713'; cpBtn.classList.add('copied'); setTimeout(function() { cpBtn.textContent = 'Copy'; cpBtn.classList.remove('copied'); }, 2000); }); };
-            applyEl.addEventListener('click', async function() { try { const r = await fetch('/active-jobs/' + job.Job_ID, { method: 'PUT', headers: { 'Content-Type': 'application/json' } }); if (r.ok) appTd.innerHTML = '<span class="tick">\u2713</span>'; } catch(err) { console.error(err); } });
-            extTd.appendChild(applyEl); extTd.appendChild(cpBtn);
-        } else { extTd.textContent = '\u2014'; }
-        row.appendChild(extTd); row.appendChild(appTd);
+        const appTd = document.createElement('td'); appTd.className = 'applied-col';
+        if (isMarkedApplied(job.Date_Applied)) appTd.innerHTML = '<span class="tick">\u2713</span>';
+        row.appendChild(appTd);
         const stTd = document.createElement('td'); stTd.appendChild(statusBadge(job.Status)); row.appendChild(stTd);
         row.appendChild(td(fmt(job.Visits_Count, '1'))); row.appendChild(td(fmt(job.Last_Seen)));
+        // New columns: City, Duration, People Applied
+        row.appendChild(td(fmt(job.Posted_City)));
+        row.appendChild(td(fmt(job.Posted_Duration)));
+        const paTd = document.createElement('td');
+        paTd.textContent = (job.People_Applied !== null && job.People_Applied !== undefined) ? job.People_Applied : 'N/A';
+        row.appendChild(paTd);
+        // Delete button
+        const delTd = document.createElement('td'); delTd.className = 'sl-col';
+        delTd.appendChild(makeDeleteBtn(job.Job_ID, 'active'));
+        row.appendChild(delTd);
         tbody.appendChild(row);
     });
     const start = (pg.page - 1) * pg.pageSize + 1; const end = Math.min(pg.page * pg.pageSize, pg.total);
     document.getElementById('statsActive').textContent = 'Showing ' + start + '\u2013' + end + ' of ' + pg.total + ' jobs';
-}
-function sortActiveByExt() {
-    activeSortExt = activeSortExt === 'asc' ? 'desc' : 'asc';
-    state.active.data.sort(function(a, b) { const va = a.External_Job_link || '', vb = b.External_Job_link || ''; return activeSortExt === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va); });
-    renderActive();
 }
 
 /* ── Skipped ── */
@@ -379,7 +414,7 @@ async function fetchSkipped() {
 }
 function renderSkipped() {
     const pg = pagination.skipped; const tbody = document.getElementById('skippedBody'); tbody.innerHTML = '';
-    if (!state.skipped.data.length) { tbody.innerHTML = '<tr><td colspan="14" class="status-msg">No skipped jobs.</td></tr>'; document.getElementById('statsSkipped').textContent = 'No results'; return; }
+    if (!state.skipped.data.length) { tbody.innerHTML = '<tr><td colspan="11" class="status-msg">No skipped jobs.</td></tr>'; document.getElementById('statsSkipped').textContent = 'No results'; return; }
     state.skipped.data.forEach(function(job, i) {
         const gi = (pg.page - 1) * pg.pageSize + i + 1;
         const row = document.createElement('tr');
@@ -389,21 +424,19 @@ function renderSkipped() {
         compTd.appendChild(job.Company_Website && job.Company_Website !== 'Unknown' ? linkEl(job.Company_Website, job.Company) : document.createTextNode(fmt(job.Company)));
         row.appendChild(compTd);
         row.appendChild(td(fmt(job.Work_Location) + ' / ' + fmt(job.Work_Style)));
-        row.appendChild(td(fmt(job.Job_Category)));
         const rTd = document.createElement('td'); rTd.className = 'reason-cell';
         const b = document.createElement('span'); b.className = 'badge badge-skipped'; b.textContent = fmt(job.Skip_Reason, 'Unknown');
         rTd.appendChild(b); row.appendChild(rTd);
-        row.appendChild(td(fmt(job.Experience_Required)));
-        const skTd = document.createElement('td'); skTd.className = 'desc-cell'; skTd.appendChild(expandable(job.Skills_Required)); row.appendChild(skTd);
         const hrTd = document.createElement('td');
         hrTd.appendChild(job.HR_Name && job.HR_Name !== 'Unknown' ? linkEl(job.HR_Link, job.HR_Name) : document.createTextNode('N/A'));
         row.appendChild(hrTd);
         row.appendChild(typeTdEl(job.Is_Easy_Apply, job.Status || 'Skipped'));
-        const aLinkTd = document.createElement('td');
-        const aEl = applyLinkEl(job.External_Job_link || '', job.Is_Easy_Apply === true || job.Is_Easy_Apply === 'True');
-        aLinkTd.appendChild(aEl || document.createTextNode('\u2014')); row.appendChild(aLinkTd);
         row.appendChild(td(fmt(job.Date_Applied)));
         row.appendChild(td(fmt(job.Visits_Count, '1'))); row.appendChild(td(fmt(job.Last_Seen)));
+        // Delete button
+        const delTd = document.createElement('td'); delTd.className = 'sl-col';
+        delTd.appendChild(makeDeleteBtn(job.Job_ID, 'skipped'));
+        row.appendChild(delTd);
         tbody.appendChild(row);
     });
     const start = (pg.page - 1) * pg.pageSize + 1; const end = Math.min(pg.page * pg.pageSize, pg.total);
@@ -426,7 +459,7 @@ async function fetchFailed() {
 }
 function renderFailed() {
     const pg = pagination.failed; const tbody = document.getElementById('failedBody'); tbody.innerHTML = '';
-    if (!state.failed.data.length) { tbody.innerHTML = '<tr><td colspan="15" class="status-msg">No failed jobs.</td></tr>'; document.getElementById('statsFailed').textContent = 'No results'; return; }
+    if (!state.failed.data.length) { tbody.innerHTML = '<tr><td colspan="12" class="status-msg">No failed jobs.</td></tr>'; document.getElementById('statsFailed').textContent = 'No results'; return; }
     state.failed.data.forEach(function(job, i) {
         const gi = (pg.page - 1) * pg.pageSize + i + 1;
         const row = document.createElement('tr');
@@ -436,22 +469,20 @@ function renderFailed() {
         compTd.appendChild(job.Company_Website && job.Company_Website !== 'Unknown' ? linkEl(job.Company_Website, job.Company) : document.createTextNode(fmt(job.Company)));
         row.appendChild(compTd);
         row.appendChild(td(fmt(job.Work_Location) + ' / ' + fmt(job.Work_Style)));
-        row.appendChild(td(fmt(job.Job_Category)));
         const errTd = document.createElement('td'); errTd.className = 'reason-cell';
         const errB = document.createElement('span'); errB.className = 'badge badge-failed'; errB.textContent = fmt(job.Failure_Reason, 'Unknown');
         errTd.appendChild(errB); row.appendChild(errTd);
-        row.appendChild(td(fmt(job.Experience_Required)));
-        const skTd = document.createElement('td'); skTd.className = 'desc-cell'; skTd.appendChild(expandable(job.Skills_Required)); row.appendChild(skTd);
         const hrTd = document.createElement('td');
         hrTd.appendChild(job.HR_Name && job.HR_Name !== 'Unknown' ? linkEl(job.HR_Link, job.HR_Name) : document.createTextNode('N/A'));
         row.appendChild(hrTd);
         row.appendChild(typeTdEl(job.Is_Easy_Apply, job.Status || 'Failed'));
-        const fLinkTd = document.createElement('td');
-        const fEl = applyLinkEl(job.External_Job_link || '', job.Is_Easy_Apply === true || job.Is_Easy_Apply === 'True');
-        fLinkTd.appendChild(fEl || document.createTextNode('\u2014')); row.appendChild(fLinkTd);
         row.appendChild(td(fmt(job.Date_Applied)));
         row.appendChild(td(fmt(job.Screenshot, '\u2014')));
         row.appendChild(td(fmt(job.Visits_Count, '1'))); row.appendChild(td(fmt(job.Last_Seen)));
+        // Delete button
+        const delTd = document.createElement('td'); delTd.className = 'sl-col';
+        delTd.appendChild(makeDeleteBtn(job.Job_ID, 'failed'));
+        row.appendChild(delTd);
         tbody.appendChild(row);
     });
     const start = (pg.page - 1) * pg.pageSize + 1; const end = Math.min(pg.page * pg.pageSize, pg.total);

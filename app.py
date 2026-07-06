@@ -71,10 +71,14 @@ def _map_job_doc(doc):
         'Screenshot':             doc.get('screenshot', ''),
         'Visits_Count':           doc.get('visits_count', 1),
         'Last_Seen':              str(doc.get('last_seen', '')),
+        'Posted_City':            doc.get('posted_city', 'Unknown'),
+        'Posted_Duration':        doc.get('posted_duration', 'Unknown'),
+        'People_Applied':         doc.get('people_applied'),   # int or None
     }
 @app.route('/active-jobs', methods=['GET'])
 def get_active_jobs():
-    """Paginated active/captured jobs. Supports: page, page_size, is_easy_apply, status, hide_reposted, search."""
+    """Paginated active/captured jobs. Supports: page, page_size, is_easy_apply, status,
+    hide_reposted, search, posted_city, posted_duration_type, min_people_applied."""
     try:
         db = get_mongo_db()
         if db is None:
@@ -97,6 +101,22 @@ def get_active_jobs():
                 {'title':   {'$regex': search, '$options': 'i'}},
                 {'company': {'$regex': search, '$options': 'i'}},
             ]
+        # --- posted_city filter ---
+        city_filter = request.args.get('posted_city', '').strip()
+        if city_filter:
+            query['posted_city'] = {'$regex': city_filter, '$options': 'i'}
+        # --- posted_duration filter (hours / days / weeks / months) ---
+        duration_type = request.args.get('posted_duration_type', '').strip()
+        _dur_map = {'hours': 'hour', 'days': 'day', 'weeks': 'week', 'months': 'month'}
+        if duration_type in _dur_map:
+            query['posted_duration'] = {'$regex': _dur_map[duration_type], '$options': 'i'}
+        # --- people_applied minimum filter ---
+        min_people = request.args.get('min_people_applied', '').strip()
+        if min_people:
+            try:
+                query['people_applied'] = {'$gte': int(min_people)}
+            except ValueError:
+                pass
         return _paginated_response(db, query, page, page_size)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -126,6 +146,20 @@ def update_active_date(job_id):
         updated = update_job_date(db, job_id, new_date)
         if updated:
             return jsonify({"message": "Date Applied updated successfully"}), 200
+        return jsonify({"error": f"Job ID {job_id} not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+@app.route('/jobs/<job_id>', methods=['DELETE'])
+def delete_job_endpoint(job_id):
+    """Delete a job by job_id from the linkedin-jobs collection."""
+    try:
+        db = get_mongo_db()
+        if db is None:
+            return jsonify({"error": "MongoDB not available"}), 503
+        from modules.db import delete_job
+        deleted = delete_job(db, job_id)
+        if deleted:
+            return jsonify({"message": "Job deleted successfully"}), 200
         return jsonify({"error": f"Job ID {job_id} not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -169,4 +203,3 @@ def get_skipped_jobs():
         return jsonify({"error": str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True)
-
